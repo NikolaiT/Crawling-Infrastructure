@@ -1,0 +1,33 @@
+{
+  "name": "crawling-library",
+  "version": "1.0.3",
+  "description": "Shared source code for the crawler and the master",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "library",
+    "crawling",
+    "distributed",
+    "web-scraping"
+  ],
+  "repository": "",
+  "homepage": "https://scrapeulous.com/",
+  "author": "Nikolai Tschacher <contact@scrapeulous.com> (https://scrapeulous.com)",
+  "license": "GNU AFFERO GENERAL PUBLIC LICENSE",
+  "devDependencies": {
+    "@types/mongoose": "^5.7.14",
+    "@types/node": "^13.1.4",
+    "tslib": "^1.11.1",
+    "typescript": "^3.7.4"
+  },
+  "dependencies": {
+    "@types/glob": "^7.1.1",
+    "aws-sdk": "^2.599.0",
+    "detect-newline": "^3.1.0",
+    "glob": "^7.1.6",
+    "mongoose": "^5.9.11",
+    "winston": "^3.2.1"
+  }
+}

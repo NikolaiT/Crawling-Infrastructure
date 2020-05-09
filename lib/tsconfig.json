@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "module": "commonjs",
+    "outDir": "dist",
+    "removeComments": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es6",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+
+    /* Truncated compiler options to list only relevant options */
+    "declaration": true, 
+    "declarationMap": true,
+    "rootDir": ".",   
+    "composite": true
+  },
+  // * Any project that is referenced must itself have a `references` array (which may be empty).
+  "references": []
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fingerprint2.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs2/2.1.0/fingerprint2.min.js"></script>
+</head>
+<body>
+
+<p id="fingerprint"></p>
+
+<script>
+  function handler(components) {
+    console.log(components) // an array of components: {key: ..., value: ...}
+    var values = components.map(function (component) { return component.value })
+    var murmur = Fingerprint2.x64hash128(values.join(''), 31)
+    document.getElementById('fingerprint').innerText = murmur;
+  }
+
+  if (window.requestIdleCallback) {
+    requestIdleCallback(function () {
+      Fingerprint2.get(handler)
+    })
+  } else {
+    setTimeout(function () {
+      Fingerprint2.get(handler)
+    }, 500)
+  }
+</script>
+
+</body>
+</html>

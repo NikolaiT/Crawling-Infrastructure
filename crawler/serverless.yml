@@ -1,0 +1,61 @@
+service: ${env:LAMBDA_SERVICE_NAME}
+
+provider:
+  profile: ${env:AWS_PROFILE}
+  name: aws
+  runtime: nodejs10.x
+  stage: dev
+  versionFunctions: true
+
+package:
+  include:
+    - dist/**
+  exclude:
+    - node_modules/puppeteer/.local-chromium/**
+    - workers/**
+    - test/**
+    - worker_images/**
+    - log/**
+    - .idea/**
+    - doc/**
+    - samples/**
+    - experiments/**
+    - src/**
+
+functions:
+  http-crawler:
+    # https://serverless.com/framework/docs/providers/aws/guide/packaging/
+    exclude:
+      - node_modules/puppeteer/.local-chromium/**
+      - node_modules/puppeteer-core/**
+      - node_modules/chrome-aws-lambda/**
+      - node_modules/moment/**
+      - workers/**
+      - test/**
+      - worker_images/**
+      - log/**
+      - .idea/**
+      - doc/**
+      - samples/**
+      - experiments/**
+      - src/**
+    memorySize: 800
+    timeout: 300
+    handler: dist/crawl_worker/src/index.handler
+    description: Cloud HTTP Crawler for AWS.
+    events:
+      - http:
+          path: ${env:COMPANY}/crawler/http
+          method: GET
+          cors: true
+
+  browser-crawler:
+    memorySize: 1600
+    timeout: 300
+    handler: dist/crawl_worker/src/index.handler
+    description: Cloud Browser Crawler for AWS.
+    events:
+      - http:
+          path: ${env:COMPANY}/crawler/browser
+          method: GET
+          cors: true

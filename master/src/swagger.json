@@ -1,0 +1,576 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.1",
+    "title": "Master Restful Api",
+    "description": "The Master Rest Api accepts crawl tasks and the scheduler makes progress on them. You can modify existing crawl tasks while they are running and get metadata information about them. Crawl Tasks are defined by you in the form of a Javascript class that derives from `HttpWorker` or `BrowserWorker` and overrides the `crawl` method.",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "tags": [
+    {
+      "name": "Crawl Tasks",
+      "description": "API for crawl tasks in the system"
+    }
+  ],
+  "paths": {
+    "/task": {
+      "post": {
+        "tags": [
+          "Crawl Tasks"
+        ],
+        "summary": "Create a new crawl task on the  master server",
+        "requestBody": {
+          "description": "Crawl Task Object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/CrawlTask"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Crawl Task was successfully added to the infra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/CrawlTaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Failed. Bad post data."
+          }
+        }
+      }
+    },
+    "/task/{id}": {
+      "delete": {
+        "tags": [
+          "Crawl Tasks"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "The crawl task id"
+          }
+        ],
+        "summary": "Delete a task by task id",
+        "responses": {
+          "200": {
+            "description": "Deleted successfully"
+          },
+          "400": {
+            "description": "Failed. Error message."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Crawl Tasks"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "The crawl task id"
+          }
+        ],
+        "summary": "Update a task by task id",
+        "requestBody": {
+          "description": "Crawl Task Update Object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/CrawlTaskUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated successfully"
+          },
+          "400": {
+            "description": "Failed. Error message."
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "tags": [
+          "Crawl Tasks"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "API_KEY",
+            "required": true,
+            "description": "The API KEY to auth the request"
+          },
+          {
+            "in": "query",
+            "name": "simple",
+            "required": false,
+            "description": "Whether to print a simple anf fast summary or a extensive and slow summary. Use `simple=false` for an extensive summary."
+          }
+        ],
+        "summary": "Get statistical information about all crawl tasks in the system",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/CrawlTaskStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proxies": {
+      "get": {
+        "tags": [
+          "Crawl Tasks"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "API_KEY",
+            "required": true,
+            "description": "The API KEY to auth the request"
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "description": "Filter the proxy by adding query args.",
+            "example": "?status=0&provider=cosmoproxy"
+          }
+        ],
+        "summary": "Get all proxies currently loaded into the crawling infra.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/Proxy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/storage/{id}": {
+      "get": {
+        "tags": [
+          "Crawl Tasks"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "API_KEY",
+            "required": true,
+            "description": "The API KEY to auth the request"
+          },
+          {
+            "in": "query",
+            "name": "how",
+            "required": false,
+            "description": "how the s3 storage results should be displayed",
+            "example": "use `?how=cmd` in order to obtain download instructions as bash script and `?how=flat` in order to get s3 locations"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "The crawl task id"
+          }
+        ],
+        "summary": "Get storage information for crawl tasks.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/definitions/Proxy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/results/{id}": {
+      "get": {
+        "tags": [
+          "Crawl Tasks"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "API_KEY",
+            "required": true,
+            "description": "The API KEY to auth the request"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "The crawl task id"
+          }
+        ],
+        "summary": "Obtain crawl task results.",
+        "responses": {
+          "200": {
+            "description": "Contains the results payload"
+          },
+          "400": {
+            "description": "Failed. Error message."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CrawlTask": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "string",
+          "required": true,
+          "description": "A url or local path to a separated text file holding one item per line"
+        },
+        "function": {
+          "type": "string",
+          "required": true,
+          "description": "A url or local path to a text file with a javascript class that either extends HttpWorker or BrowserWorker"
+        },
+        "worker_type": {
+          "type": "string",
+          "enum": ["http", "browser"],
+          "required": true,
+          "description": "What kind of worker your crawl task is"
+        },
+        "regions": {
+          "type": "string",
+          "default": "",
+          "required": false,
+          "description": "Add a region from where to run your crawl task. If not specified, regions are chosen arbitrarily"
+        },
+        "priority": {
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "description": "The priority of this crawl task. 1 is lowest priority, 10 is highest priority"
+        },
+        "priority_policy": {
+          "type": "string",
+          "enum": ["absolute", "relative"],
+          "required": false,
+          "default": "absolute",
+          "description": "How priority is handled. When set to `absolute`, crawl tasks with priority 1 will never receive crawling resources until a task with priority 2 or higher is finished. When using `relative`, tasks will receive crawling resources relative to their priority"
+        },
+        "max_items_per_second": {
+          "type": "number",
+          "default": 1,
+          "required": false,
+          "description": "The maximal throughput in terms of items/second that this crawl task should achieve."
+        },
+        "crawl_options": {
+          "$ref": "#/definitions/CrawlOptions"
+        },
+        "allow_duplicates": {
+          "type": "boolean",
+          "default": true,
+          "required": false,
+          "description": "Whether duplicate items should be removed or not"
+        },
+        "whitelisted_proxies": {
+          "type": "boolean",
+          "default": false,
+          "required": false,
+          "description": "Whether the task must have access to whitelisted proxies. Worker will be spawned as part of a docker cluster as a consequence."
+        }
+      }
+    },
+    "Test": {
+      "type": "object",
+      "properties": {
+        "simple": {
+          "type": "string",
+          "description": "A simple string."
+        }
+      }
+    },
+    "CrawlOptions": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "user_agent": {
+          "type": "string",
+          "description": "The default user agent to be used with this crawl task. All requests will use this user agent.",
+          "default": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3942.0 Safari/537.36"
+        },
+        "headers": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "The default headers to be used with this crawl task. All requests will use those headers."
+        },
+        "random_user_agent": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether a random user agent should be used for each new allocation of a puppeteer browser or Got client library."
+        },
+        "request_timeout": {
+          "type": "number",
+          "default": 15000,
+          "description": "The timeout in milliseconds before a Got request is deemed to have failed."
+        },
+        "cookies": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/definitions/Cookie"
+          },
+          "description": "Those cookies are added to the http or browser context of each request"
+        },
+        "viewport": {
+          "type": "string",
+          "default": "",
+          "description": "The viewport of the chromium frame when crawling"
+        },
+        "default_navigation_timeout": {
+          "type": "number",
+          "default": 40000,
+          "description": "The navigation timeout for browser crawling"
+        },
+        "pup_args": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of additional puppeteer command line arguments that are passed to the chromium browser. See here: https://peter.sh/experiments/chromium-command-line-switches/"
+        },
+        "intercept_types": {
+          "type": "array",
+          "example": [""],
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "What request media types should be aborted. Helps to save bandwith and time. Allowed values: ['image','stylesheet','media','font','texttrack','object','beacon','csp_report','imageset']"
+        },
+        "apply_evasion": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether well known puppeteer detection evasion techniques should be used. This library is used internally: https://www.npmjs.com/package/puppeteer-extra-plugin-stealth"
+        },
+        "userDataDir": {
+          "type": "string",
+          "example": "/tmp/tmpDataDir/"
+        },
+        "block_webrtc": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Cookie": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Cookie name"
+        },
+        "value": {
+          "type": "string",
+          "description": "Cookie value"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Cookie domain"
+        }
+      }
+    },
+    "CrawlTaskResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "num_items": {
+          "type": "number"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "status": {
+          "type": "number",
+          "enum": ["started", "completed", "failed", "paused"]
+        },
+        "regions": {
+          "type": "number"
+        }
+      }
+    },
+    "CrawlTaskRps": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "required": true
+        },
+        "max_items_per_second": {
+          "type": "number",
+          "required": true,
+          "description": "The throughput in terms of number of items/second that should be achieved by the crawl task."
+        }
+      }
+    },
+    "CrawlTaskStats": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "number",
+          "enum": ["started", "completed", "failed", "paused"]
+        },
+        "num_items": {
+          "type": "number"
+        },
+        "max_items_per_second": {
+          "type": "number"
+        },
+        "average_rps": {
+          "type": "string"
+        },
+        "num_crawl_workers_started": {
+          "type": "number"
+        },
+        "num_workers_running": {
+          "type": "number"
+        },
+        "num_lost_workers": {
+          "type": "number"
+        },
+        "worker_meta_statistics": {
+          "type": "object"
+        },
+        "queue_statistics": {
+          "type": "object"
+        }
+      }
+    },
+    "CrawlTaskUpdate": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "number",
+          "enum": ["started", "completed", "failed", "paused"]
+        },
+        "max_items_per_second": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "max_lost_workers": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "max_items_per_worker": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "priority": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "priority_policy": {
+          "type": "number",
+          "enum": ["absolute", "relative"]
+        }
+      }
+    },
+    "Proxy": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["datacenter", "dedicated", "residential", "mobile"]
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["luminati", "cosmoproxy", "stormproxies"]
+        },
+        "status": {
+          "type": "number",
+          "enum": ["functional", "damaged", "expired"]
+        },
+        "subtype": {
+          "type": "string",
+          "example": "linkedin"
+        },
+        "proxy": {
+          "type": "string",
+          "example": "127.0.0.0:9005"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": ["http", "https", "socks4", "socks5" ,"other"]
+        },
+        "whitelisted": {
+          "type": "boolean",
+          "default": false,
+          "description": "Proxy is whitelisted."
+        },
+        "rotating": {
+          "type": "boolean",
+          "description": "Proxy is rotating."
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "last_used": {
+          "type": "string",
+          "description": "When the proxy was last used, successful or unsuccessful."
+        },
+        "last_blocked": {
+          "type": "string",
+          "description": "When the proxy was last blocked."
+        },
+        "block_counter": {
+          "type": "string",
+          "description": "How many times was the proxy blocked"
+        }
+      }
+    }
+  }
+}

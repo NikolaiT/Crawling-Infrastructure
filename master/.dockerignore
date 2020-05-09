@@ -1,0 +1,15 @@
+.gitignore
+
+**/node_modules
+node_modules
+
+frontend/build/
+frontend/build/*
+
+env/
+env/*
+
+data
+data/*
+
+.idea

@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  crawl_worker:
+    image: tschachn/crawl_worker:latest
+#    build:
+#      context: .
+#      dockerfile: worker_images/with_node_slim/Dockerfile
+    ports:
+      - "3333:3333"
+    deploy:
+      replicas: 100
+      placement:
+        constraints: [node.labels.type == crawl_worker]
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1500M
+        reservations:
+          cpus: '1'
+          memory: 1000M

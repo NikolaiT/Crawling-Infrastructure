@@ -1,0 +1,46 @@
+{
+  "daemon_heartbeat": 10000,
+  "browser_lambda_arn": "",
+  "http_lambda_arn": "",
+  "mongo_url": "mongodb://{mongo_user}:{mongo_pass}@{mongo_host}/",
+  "num_items_browser": 15,
+  "num_items_http": 30,
+  "logging_root": "/var/log/scheduler/",
+  "max_lost_workers_ratio": 0.01,
+  "worker_lost_threshold_minutes": 10,
+  "worker_lost_threshold_docker_minutes": 60,
+  "purge_worker_meta_after_minutes": 5,
+  "priority_policy": "absolute",
+  "random_region": true,
+  "verbosity": 1,
+  "num_machines": 2,
+  "cluster_size": "large",
+  "retry_failed_items": 3,
+  "max_crawling_time_lambda": 240,
+  "regions": [
+    {
+      "region": "us-east-1",
+      "bucket": ""
+    },
+    {
+      "region": "us-east-2",
+      "bucket": ""
+    },
+    {
+      "region": "us-west-1",
+      "bucket": ""
+    },
+    {
+      "region": "us-west-2",
+      "bucket": ""
+    },
+    {
+      "region": "ca-central-1",
+      "bucket": ""
+    },
+    {
+      "region": "eu-west-1",
+      "bucket": ""
+    }
+  ]
+}

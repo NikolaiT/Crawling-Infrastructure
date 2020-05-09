@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  frontend:
+    env_file: env/production.env
+
+  api:
+    env_file: env/production.env
+
+  scheduler:
+    env_file: env/production.env
+
+  database:
+    env_file: env/production.env

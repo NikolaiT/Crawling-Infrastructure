@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRTC Leak Prevent</title>
+  </head>
+  <body>
+    <h3>Advanced options</h3>
+
+    <div id="content">
+      <div id="new">
+        <p>
+          <strong>WebRTC IP handling policy</strong>
+        </p>
+        <p>
+          <label for="policy">IP handling policy:</label>
+          <select id="policy">
+            <option value="default_public_interface_only">Use the default public interface only</option>
+            <option value="default_public_and_private_interfaces">Use the default public interface and private interface</option>
+            <option value="disable_non_proxied_udp">Disable non-proxied UDP (force proxy)</option>
+          </select>
+        </p>
+      </div>
+
+      <div id="legacy">
+        <p>
+          <strong>Legacy options</strong>
+        </p>
+        <p>
+          <input type="checkbox" id="multipleroutes">
+          <label for="multipleroutes">Prevent WebRTC from using routes other than the default route.</label><br>
+          <em>(Supported from Chromium version 42, and depreciated from version 48)</em>
+        </p>
+        <p id="legacyProxy">
+          <input type="checkbox" id="proxy">
+          <label for="proxy">Prevent WebRTC from using non-proxied UDP.</label><br>
+          <em>(Supported from Chromium version 47, and depreciated from version 48)</em>
+        </p>
+      </div>
+
+      <p>
+        <a href="https://github.com/aghorler/WebRTC-Leak-Prevent/blob/master/DOCUMENTATION.md#what-do-the-settings-mean-and-do"><em>What do these options mean?</em></a>
+      </p>
+    </div>
+
+    <div id="fail">
+      <p style="color:red; text-align: center;">This version of Chromium is incompatible with the required WebRTC privacy options.</p>
+    </div>
+
+    <div id="incognito">
+      <strong>Incognito protection</strong>
+
+      <p id="incognitoAllowed" style="color:green;">Enabled</p>
+
+      <p id="incognitoDisallowed" style="color:red;">
+        Not enabled. <a style="color:red;" href="https://github.com/aghorler/WebRTC-Leak-Prevent/blob/master/DOCUMENTATION.md#what-is-incognito-protection"><em>Learn more.</em></a>
+      </p>
+    </div>
+
+    <p style="color:grey; text-align: center;">
+      Developed by <a href="https://aaronhorler.com">Aaron Horler</a> (aghorler) | <a href="https://github.com/aghorler/WebRTC-Leak-Prevent">GitHub source</a>
+    </p>
+
+    <script src="/js/options.js"></script>
+  </body>
+</html>

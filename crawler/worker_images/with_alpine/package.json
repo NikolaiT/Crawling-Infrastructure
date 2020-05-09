@@ -1,0 +1,35 @@
+{
+  "name": "crawl_worker_with_alpine",
+  "version": "1.0.0",
+  "description": "Worker Docker Image Based on Alpine Linux from https://github.com/Zenika/alpine-chrome",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "author": "Nikolai Tschacher",
+  "license": "ISC",
+  "dependencies": {
+    "app-root-path": "^3.0.0",
+    "aws-sdk": "^2.573.0",
+    "body-parser": "^1.19.0",
+    "cheerio": "^1.0.0-rc.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "flags": "^0.1.3",
+    "got": "^9.6.0",
+    "moment": "^2.24.0",
+    "mongoose": "^5.7.11",
+    "morgan": "^1.9.1",
+    "puppeteer": "^2.0.0",
+    "puppeteer-extra": "^3.1.7",
+    "puppeteer-extra-plugin-stealth": "^2.4.5",
+    "tough-cookie": "^3.0.1",
+    "tunnel": "0.0.6",
+    "user-agents": "^1.0.443",
+    "uuid": "^3.3.3",
+    "winston": "^3.2.1"
+  }
+}

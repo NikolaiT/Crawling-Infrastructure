@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "removeComments": true,
+    "declaration": false,
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "target": "es2017",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "strict": true,
+    "baseUrl": "./",
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ],
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@lib/*": [
+        "../lib/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "../lib"
+  ]
+}

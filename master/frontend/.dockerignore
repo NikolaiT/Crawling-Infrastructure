@@ -1,0 +1,12 @@
+.gitignore
+
+**/node_modules
+node_modules
+env/*.env
+
+.idea
+test
+
+package.json
+package-lock.json
+tsconfig.json

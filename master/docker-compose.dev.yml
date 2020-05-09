@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  frontend:
+    env_file: env/development.env
+
+  api:
+    env_file: env/development.env
+
+  scheduler:
+    env_file: env/development.env
+
+  database:
+    # do not deploy the database locally
+    deploy:
+      replicas: 0
+    env_file: env/development.env
+
+  crawler:
+    deploy:
+      replicas: 0

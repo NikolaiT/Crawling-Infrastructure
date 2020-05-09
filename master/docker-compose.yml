@@ -1,0 +1,136 @@
+version: '3'
+
+services:
+  frontend:
+    image: frontend:latest
+    hostname: frontend
+    networks:
+      - crawlinfra
+    env_file: env/development.env
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints: [ node.role == manager ]
+
+  api:
+    image: api:latest
+    hostname: api
+    network_mode: "host"
+    networks:
+      - crawlinfra
+    env_file: env/development.env
+    environment:
+      WAIT_HOSTS: "${MONGODB_HOST}"
+    expose:
+      - "${API_PORT}"
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints: [ node.role == manager ]
+
+  scheduler:
+    image: scheduler:latest
+    hostname: scheduler
+    networks:
+      - crawlinfra
+    env_file: env/development.env
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints: [ node.role == manager ]
+
+  database:
+    image: mongo:4.2.1-bionic
+    hostname: database
+    networks:
+      - crawlinfra
+    expose:
+      - 27017
+    ports:
+      - "27017:27017"
+    env_file: env/development.env
+    volumes:
+      - ".${MONGO_DATA_DIR}:${MONGO_DATA_DIR}"
+    command: "mongod --logpath=${MONGO_LOG_FILE}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      placement:
+        constraints: [ node.role == manager ]
+
+  crawler:
+    image: tschachn/crawl_worker:latest
+    networks:
+      - crawlinfra
+    ports:
+      - "3333:3333"
+    environment:
+      - HOST=0.0.0.0
+      - USING_XVFB=1
+    deploy:
+      replicas: 0
+      placement:
+        # allow crawler to run on all nodes
+        # except the manager node
+        # that way we don't need to assign labels from within
+        # the scheduler container
+        constraints:
+          - node.role != manager
+          - engine.labels.type == crawler
+      restart_policy:
+        condition: any
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2000M
+        reservations:
+          cpus: '.8'
+          memory: 1500M
+
+  # this service only serves http crawl tasks, thus the resource constraints are significantly lower
+  http-crawler:
+    image: tschachn/crawl_worker:latest
+    networks:
+      - crawlinfra
+    ports:
+      - "4444:4444"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=4444
+      - USING_XVFB=0
+    deploy:
+      replicas: 0
+      placement:
+        constraints:
+          - node.role != manager
+          - engine.labels.type == http-crawler
+      restart_policy:
+        condition: any
+      resources:
+        limits:
+          cpus: '.6'
+          memory: 600M
+        reservations:
+          cpus: '.1'
+          memory: 100M
+
+networks:
+  crawlinfra:
+    driver: overlay

@@ -1,0 +1,14 @@
+node_modules
+.serverless/
+serverless.yml
+crawl_worker.iml
+.idea
+old_src
+.local
+
+experiments/
+log/
+doc/
+samples/
+test/
+workers/
