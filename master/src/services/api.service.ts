@@ -134,7 +134,6 @@ export class ApiService {
     return crawl_task;
   }
 
-
   public async crawl(req: Request, res: Response): Promise<any> {
     let api_key: string = res.locals.api_key;
 

@@ -16,7 +16,7 @@ import {getLogger, Logger} from "@lib/misc/logger";
 import {getTaskById} from './helpers';
 import fs from 'fs';
 import path from 'path';
-import {checkItems, profileAllowed, loadFunctionCode, configureCrawlProfile, assignRegions} from "./lib";
+import {assignRegions, checkItems, configureCrawlProfile, loadFunctionCode, profileAllowed} from "./lib";
 
 
 export class CrawlTaskService {
@@ -537,7 +537,6 @@ function walk(dir, fileList = []) {
     return false;
   }
 
-
   /**
    * Download all results from the s3 storage.
    *
@@ -624,6 +623,7 @@ function walk(dir, fileList = []) {
       max_items_per_second: obj.max_items_per_second || 1.0,
       max_items_per_worker: obj.max_items_per_worker || null,
       whitelisted_proxies: obj.whitelisted_proxies || false,
+      storage_policy: obj.storage_policy || StoragePolicy.itemwise,
       crawl_options: obj.crawl_options || {
         default_navigation_timeout: 30000,
         request_timeout: 10000,
@@ -714,6 +714,7 @@ function walk(dir, fileList = []) {
 
       try {
         await new_task.save();
+        this.logger.info(new_task);
         return new_task;
       } catch (err) {
         return {error: `Error saving task: ${err}`};

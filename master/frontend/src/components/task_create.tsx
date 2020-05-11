@@ -303,6 +303,22 @@ export class TaskCreate extends React.Component<{form: any}, {redirect: boolean,
 
         <Form.Item label={
           <span>
+              Storage Policy&nbsp;
+            <Tooltip title="The storage policy for this task. itemwise: save one item per file, merged: save all items processed by a worker in a file.">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+        }>
+          {getFieldDecorator('storage_policy', {})(
+            <Select placeholder="Please select the storage_policy">
+              <Option value="itemwise">itemwise</Option>
+              <Option value="merged">merged</Option>
+            </Select>
+          )}
+        </Form.Item>
+
+        <Form.Item label={
+          <span>
               Crawling Profile&nbsp;
             <Tooltip title="The crawling profile for this task. cloudflare - maximum stealth, random user agent, uses proxies,
             block WebRTC, random user data dir, ...">
