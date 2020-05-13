@@ -41,6 +41,13 @@ export class TaskCreate extends React.Component<{form: any}, {redirect: boolean,
   handleSubmit = (e: any) => {
     e.preventDefault();
     this.props.form.validateFieldsAndScroll((err: any, values: any) => {
+      try {
+        let crawl_options = JSON.parse(values.crawl_options);
+      } catch(err) {
+        message.error('crawl_options contains invalid JSON: ' + err);
+        return;
+      }
+      message.success('Attempting to create Crawl Task...');
       if (!err) {
         api('task/', 'POST', values).then((data) => {
           console.log(data);
@@ -164,6 +171,16 @@ export class TaskCreate extends React.Component<{form: any}, {redirect: boolean,
   "concurrency": 5,
   "metadata": true
 }`;
+
+    const intial_crawl_options: string = JSON.stringify({
+      default_navigation_timeout: 45000,
+      request_timeout: 10000,
+      random_user_agent: false,
+      viewport: {width: 1900, height: 1024},
+      apply_evasion: false,
+      random_user_data_dir: false,
+      user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3942.0 Safari/537.36",
+    }, null, 1);
 
     let api_response_html;
 
@@ -344,6 +361,19 @@ export class TaskCreate extends React.Component<{form: any}, {redirect: boolean,
             </span>
         }>
           {getFieldDecorator('priority', { initialValue: 1 })(<InputNumber min={1} max={10} />)}
+        </Form.Item>
+
+        <Form.Item label={
+          <span>
+              Crawl Options&nbsp;
+            <Tooltip title="The crawling options passed as JSON">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+        }>
+          {getFieldDecorator('crawl_options', { initialValue: intial_crawl_options })(
+            <Input.TextArea rows={12} />
+          )}
         </Form.Item>
 
         <Form.Item>

@@ -625,7 +625,7 @@ function walk(dir, fileList = []) {
       whitelisted_proxies: obj.whitelisted_proxies || false,
       storage_policy: obj.storage_policy || StoragePolicy.itemwise,
       crawl_options: obj.crawl_options || {
-        default_navigation_timeout: 30000,
+        default_navigation_timeout: 45000,
         request_timeout: 10000,
       },
       options: obj.options || {},

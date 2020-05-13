@@ -132,6 +132,31 @@ ssh -i $PEMFILE $SERVER << EOF
 EOF
 fi
 
+
+# compile and upload a new version of the api
+if [[ $1 = "db-down" ]]; then
+
+ssh -i $PEMFILE $SERVER << EOF
+    cd $REMOTE_MASTER_DIR;
+    export $(grep -v '^#' env/production.env | xargs -0);
+    docker service scale Master_database=0;
+    docker service logs Master_database -f;
+EOF
+fi
+
+# compile and upload a new version of the database
+if [[ $1 = "db" ]]; then
+
+ssh -i $PEMFILE $SERVER << EOF
+    cd $REMOTE_MASTER_DIR;
+    export $(grep -v '^#' env/production.env | xargs -0);
+    docker service scale Master_database=0;
+    docker service scale Master_database=1;
+    docker service logs Master_database
+EOF
+
+fi
+
 # DEV ENVIRONMENT: compile and upload a new version of the scheduler
 if [[ $1 = "dev-api" ]]; then
   build

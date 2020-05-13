@@ -11,10 +11,10 @@ services:
     env_file: env/development.env
 
   database:
+    env_file: env/development.env
     # do not deploy the database locally
     deploy:
       replicas: 0
-    env_file: env/development.env
 
   crawler:
     deploy:
