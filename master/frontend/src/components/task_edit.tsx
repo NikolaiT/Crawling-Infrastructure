@@ -132,12 +132,12 @@ export class TaskEdit extends React.Component<{form: any}, {task: any}> {
           <Form.Item label={
             <span>
               Max Items per Worker&nbsp;
-              <Tooltip title="The maximal number of items a single worker can handle">
+              <Tooltip title="The maximal number of items a worker will request from the task queue">
               <Icon type="question-circle-o" />
               </Tooltip>
             </span>
           }>
-            {getFieldDecorator('max_items_per_worker', { initialValue: this.state.task.max_items_per_worker })(<InputNumber min={1} max={5000} />)}
+            {getFieldDecorator('max_items_per_worker', { initialValue: this.state.task.max_items_per_worker })(<InputNumber min={1} max={1000} />)}
             <span className="ant-form-text"> maximum items per single worker</span>
           </Form.Item>
 

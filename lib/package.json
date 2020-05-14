@@ -12,7 +12,10 @@
     "distributed",
     "web-scraping"
   ],
-  "repository": "",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/NikolaiT/Crawling-Infrastructure"
+  },
   "homepage": "https://scrapeulous.com/",
   "author": "Nikolai Tschacher <contact@scrapeulous.com> (https://scrapeulous.com)",
   "license": "GNU AFFERO GENERAL PUBLIC LICENSE",

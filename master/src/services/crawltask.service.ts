@@ -328,13 +328,6 @@ export class CrawlTaskService {
     let results = [];
 
     if (task) {
-
-      if (this.taskTooLargeForDownload(task)) {
-        if (!how.length) {
-          how = 'flat';
-        }
-      }
-
       if (how === 'cmd') {
         let s3_urls: string = '';
         for (let region of task.regions) {
@@ -357,15 +350,47 @@ done`;
       // create node script that downloads s3 results
       // and then merges the files
       if (how === 'mergeScript') {
+        let rename_items: boolean = !this.taskTooLargeForDownload(task);
+        this.logger.info(`Renaming items via queue access: ${rename_items}`);
         let s3_urls: string = '';
+        let mapping = {};
         for (let region of task.regions) {
           s3_urls += `"s3://${region.bucket}/${task_id}", `;
         }
-        let queue_handler = new QueueHandler(task.queue);
-        let queue_id_to_item_mapping = await queue_handler.getQueueItems({}, 'id item');
-        let mapping = {};
-        for (let obj of queue_id_to_item_mapping) {
-          mapping[obj['_id']] = obj['item'];
+
+        if (rename_items) {
+          let queue_handler = new QueueHandler(task.queue);
+          let queue_id_to_item_mapping = await queue_handler.getQueueItems({}, 'id item');
+          for (let obj of queue_id_to_item_mapping) {
+            mapping[obj['_id']] = obj['item'];
+          }
+        }
+
+        let parse_approach: string = '';
+        if (task.storage_policy === StoragePolicy.itemwise) {
+          parse_approach = `let item_id = path.basename(path_to_file);
+            let contents = fs.readFileSync(path_to_file);
+            let inflated = zlib.inflateSync(contents).toString();
+            `;
+          if (rename_items) {
+            parse_approach += 'obj[mapping.item_id] = JSON.parse(inflated);`;'
+          } else {
+            parse_approach += 'obj[item_id] = JSON.parse(inflated);`;'
+          }
+        } else if (task.storage_policy === StoragePolicy.merged) {
+          parse_approach = `let contents = fs.readFileSync(path_to_file);
+          let inflated = zlib.inflateSync(contents).toString();
+          let json_data = JSON.parse(inflated);
+          `;
+          if (rename_items) {
+            parse_approach += `let renamed = {};
+          for (let key in json_data) {
+            renamed[mapping[key]] = json_data[key];
+          }
+          Object.assign(obj, renamed);`;
+          } else {
+            parse_approach += 'Object.assign(obj, json_data);'
+          }
         }
 
         let script: string = `#!/usr/bin/env node
@@ -414,10 +439,7 @@ function walk(dir, fileList = []) {
     let obj = {};
     for (let path_to_file of files) {
         try {
-          let item_id = path.basename(path_to_file);
-          let contents = fs.readFileSync(path_to_file);
-          let inflated = zlib.inflateSync(contents).toString();
-          obj[mapping.item_id] = JSON.parse(inflated);
+          ${parse_approach}
         } catch (err) {
           console.error(err.toString());
         }
@@ -530,9 +552,9 @@ function walk(dir, fileList = []) {
    */
   public taskTooLargeForDownload(task: ICrawlTask): boolean {
     if (task.storage_policy === StoragePolicy.itemwise) {
-      return task.num_items > 25000;
+      return task.num_items > 10000;
     } else if (task.storage_policy === StoragePolicy.merged) {
-      return task.num_items > 200000;
+      return task.num_items > 20000;
     }
     return false;
   }
@@ -723,7 +745,14 @@ function walk(dir, fileList = []) {
   }
 
   public async createCrawlTask(req: Request, res: Response): Promise<any> {
-    let val = await this._createCrawlTask(req.body);
+    let val;
+
+    try {
+      val = await this._createCrawlTask(req.body);
+    } catch (err) {
+      this.logger.error(`Failed to create crawl task with payload: ${JSON.stringify(req.body)}`);
+      return res.status(400).send({error: 'Could not create crawl task: ' + err});
+    }
 
     if (val && val.error) {
       return res.status(400).send(val);

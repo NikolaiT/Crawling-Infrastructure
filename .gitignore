@@ -1,3 +1,4 @@
+crawler/env/testing.env
 crawler/env/crawler.env
 master/env/development.env
 master/env/production.env

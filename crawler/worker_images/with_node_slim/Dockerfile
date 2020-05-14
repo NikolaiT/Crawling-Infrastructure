@@ -1,4 +1,6 @@
 # A minimal Docker image with Node, google-chrome-stable and Xvfb
+# Author: Nikolai Tschacher
+# Website: https://scrapeulous.com/
 
 # Run with: docker run tschachn/crawler:latest
 
@@ -34,7 +36,7 @@ ENV USING_XVFB 1
 # Select Chrome version, must be compatible with Puppeteer version!
 # Find versions at https://www.ubuntuupdates.org/pm/google-chrome-stable
 # or https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
-ENV CHROME_VERSION="80.0.3987.106-1"
+ENV CHROME_VERSION="81.0.4044.138-1"
 
 # Create app directory
 WORKDIR $APP_DIR

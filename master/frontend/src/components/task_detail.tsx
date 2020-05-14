@@ -57,8 +57,8 @@ export class TaskDetails extends React.Component<{}, {task_details: any}> {
       task_details = (
         <section className="taskStats">
 
-          <Button type="primary" onClick={this.load.bind(this)}>
-            Reload
+          <Button type="primary" style={{ marginBottom: 16 }} onClick={this.load.bind(this)}>
+            Reload Task Details
           </Button>
 
           <Title level={2}>Task Details</Title>

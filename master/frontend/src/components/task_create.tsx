@@ -41,14 +41,18 @@ export class TaskCreate extends React.Component<{form: any}, {redirect: boolean,
   handleSubmit = (e: any) => {
     e.preventDefault();
     this.props.form.validateFieldsAndScroll((err: any, values: any) => {
-      try {
-        let crawl_options = JSON.parse(values.crawl_options);
-      } catch(err) {
-        message.error('crawl_options contains invalid JSON: ' + err);
-        return;
-      }
-      message.success('Attempting to create Crawl Task...');
-      if (!err) {
+      if (err) {
+        message.error('Error in Form: ' + err);
+      } else {
+        if (values.crawl_options) {
+          try {
+            values.crawl_options = JSON.parse(values.crawl_options);
+          } catch (err) {
+            message.error('crawl_options contains invalid JSON: ' + err);
+            return;
+          }
+        }
+        message.success('Attempting to create Crawl Task...');
         api('task/', 'POST', values).then((data) => {
           console.log(data);
           message.success('Crawl Task created');

@@ -1,5 +1,5 @@
 .env
-test/test.env
+env/testing.env
 
 node_modules
 .serverless/

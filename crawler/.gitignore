@@ -1,11 +1,12 @@
 env/crawler.env
+env/testing.env
 
 src/.aws/config.json
 
 .serverless/
 .serverless/*
 
-test/test.env
+test/testing.env
 test/.cache/*
 test/screens/*
 test/webrtc-blocker/

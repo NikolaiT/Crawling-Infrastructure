@@ -1,9 +1,12 @@
 {
   "name": "master",
   "author": "Nikolai Tschacher <contact@scrapeulous.com> (https://scrapeulous.com)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The master schedules crawling tasks with intelligent queuing and accepts new tasks over an REST API",
-  "repository": "",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/NikolaiT/Crawling-Infrastructure"
+  },
   "keywords": [
     "scheduling",
     "crawling",

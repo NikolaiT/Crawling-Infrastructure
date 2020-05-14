@@ -1,5 +1,5 @@
 import 'module-alias/register';
-require('dotenv').config({ path: 'test/test.env' });
+require('dotenv').config({ path: 'env/testing.env' });
 import {aws_config, beforeTest, endpoint, getFunc, metadata_keys, turnDown} from "./test_utils";
 import {QueueItemStatus} from '@lib/types/queue';
 import {ExecutionEnv, ResultPolicy} from '@lib/types/common';

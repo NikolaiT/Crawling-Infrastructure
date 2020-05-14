@@ -369,7 +369,7 @@ export class Tasks extends React.Component<{}, { download_visible: boolean, down
               </Menu.Item>
               <Menu.Item key="6">
                 <a href="#" onClick={this.getJSONScript.bind(this, record)}>
-                  Get JSON results script
+                  Get Download & Parse Script
                 </a>
               </Menu.Item>
             </Menu>

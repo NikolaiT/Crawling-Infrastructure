@@ -1,5 +1,5 @@
 import 'module-alias/register';
-require('dotenv').config({ path: 'test/test.env' });
+require('dotenv').config({ path: 'env/testing.env' });
 import {aws_config, endpoint, getFunc, metadata_keys, turnDown, beforeTest} from "./test_utils";
 import {ExecutionEnv, ResultPolicy} from '@lib/types/common';
 import {S3Controller} from '@lib/storage/storage';

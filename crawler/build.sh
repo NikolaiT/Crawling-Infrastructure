@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-source ./.env
-
 rm -rf dist/ && tsc;
 
 docker build --tag tschachn/crawler:latest --file worker_images/with_node_slim/Dockerfile .

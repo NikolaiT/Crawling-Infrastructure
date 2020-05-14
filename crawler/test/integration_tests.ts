@@ -1,5 +1,5 @@
 import 'module-alias/register';
-require('dotenv').config({ path: 'test/test.env' });
+require('dotenv').config({ path: 'env/testing.env' });
 import { expect } from 'chai';
 import 'mocha';
 import {ExecutionEnv, ResultPolicy} from '@lib/types/common';

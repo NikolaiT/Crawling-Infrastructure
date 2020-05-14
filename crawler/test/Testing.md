@@ -5,6 +5,12 @@ error can destroy the state of a complete crawl task.
 
 For that reason it must be tested.
 
+Before testing, load env variables:
+
+```bash
+export $(grep -v '^#' env/testing.env | xargs -0);
+```
+
 
 ## Integration tests
 
