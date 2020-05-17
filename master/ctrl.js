@@ -237,6 +237,18 @@ function systemSync(cmd) {
       };
       console.log(await call(test_task, 'task'));
       break;
+      case 'create_10k_task':
+        let test_task = {
+         "items": "https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/items/top10k.txt",
+         "function": "https://github.com/NikolaiT/scrapeulous/blob/master/http.js",
+         "crawl_options": {
+            "request_timeout": 20000,
+            "random_user_agent": true
+         },
+         "max_items_per_second": 1.0
+        };
+        console.log(await call(test_task, 'task'));
+        break;
     case 'items':
       let res = await call({id: getTaskIdOrAbort(), filter: { status: 3 }, select: '', limit: 10}, 'items', 'POST');
       console.log(JSON.stringify(res));

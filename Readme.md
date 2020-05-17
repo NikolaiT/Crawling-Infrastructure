@@ -487,18 +487,29 @@ Now the crawling infrastructure should be ready to work. We will test our work b
 You can issue the following command in order to create this test task:
 
 ```bash
-
 export $(grep -v '^#' env/production.env | xargs -0);
 
 node ctrl.js --action create_test_task
 ```
 
-and after a couple of moments the task should be finished and we can download the results from the S3 storage with the following Api command:
+and after a couple of moments the task should be finished and we can download the results from the S3 storage. We go to the crawling dashboard for that with
 
 ```bash
-curl -k https://"$MASTER_IP":9001/results/5ea5591a5e3cf90007602e46?API_KEY="$API_KEY"&sample_size=5&recent=1
+./launch_frontend_interface.sh
 ```
 
-### Creating the Top 10k crawl task
+and then go to Tasks and click on **Download Sample** on the task that was just created. We will get a tar.gz file with the crawling results.
+
+### Creating the top 10k crawl task
+
+The file that contains the top 10k urls can be found here: https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/items/top10k.txt
+
+With the following command, you can start the crawl task that launches the crawling of the top 10.000 urls:
+
+```bash
+export $(grep -v '^#' env/production.env | xargs -0);
+
+node ctrl.js --action create_10k_task
+```
 
 ### Analyzing the results
