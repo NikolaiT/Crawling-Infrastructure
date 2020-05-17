@@ -11,7 +11,7 @@ import {
   Col,
   Button,
   Switch,
-  InputNumber,
+  InputNumber, Input,
   Typography, Spin, Breadcrumb, Layout, message, Popconfirm
 } from 'antd';
 
@@ -94,6 +94,28 @@ export class Config extends React.Component<{form: any}, {config: any}> {
     } else {
       config = (
         <Form {...formItemLayout} onSubmit={this.handleSubmit} layout="vertical">
+
+          <Form.Item label={
+            <span>
+              Browser Lambda ARN&nbsp;
+              <Tooltip title="The browser lambda ARN to the lambda function that executes browser crawl tasks.">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+          }>
+            {getFieldDecorator('browser_lambda_arn', { initialValue: "arn:aws:lambda:{region}:{{YOUR AWS ACCOUNT ID}}:function:crawler-dev-browser-crawler" })(<Input />)}
+          </Form.Item>
+
+          <Form.Item label={
+            <span>
+              Http Lambda ARN&nbsp;
+              <Tooltip title="The http lambda ARN to the lambda function that executes http crawl tasks.">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+          }>
+            {getFieldDecorator('http_lambda_arn', { initialValue: "arn:aws:lambda:{region}:{{YOUR AWS ACCOUNT ID}}:function:crawler-dev-http-crawler" })(<Input />)}
+          </Form.Item>
 
           <Form.Item label={
             <span>

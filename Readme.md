@@ -468,30 +468,32 @@ export $(grep -v '^#' env/crawler.env | xargs -0);
 node deploy_all.js worker
 ```
 
-#### Testing the Installation
+### Configure the Master server
+
+By executing the following command, you open the web interface to administer the crawling infrastructure:
+
+```bash
+./launch_frontend_interface.sh
+```
+
+After that, we need to change some configuration parameters. We click on the **Config** tab in the menu and update
+the options **Browser Lambda ARN** and **Http Lambda ARN**. We need to specify our correct AWS Account id. So for example, we save the
+value `arn:aws:lambda:{region}:7685894858585:function:crawler-dev-browser-crawler` for **Browser Lambda ARN**.
+
+### Testing the Installation
 
 Now the crawling infrastructure should be ready to work. We will test our work by simply creating a crawl job that obtains the IP address by visiting the url `https://ipinfo.io/json` and return it.
 
-The Api call to create the task looks like this. Please replace `{{API_KEY}}` with the correct value.
+You can issue the following command in order to create this test task:
 
 ```bash
-cd ../master
 
 export $(grep -v '^#' env/production.env | xargs -0);
 
-curl -k "$API_URL"task/ \
-  -H "Content-Type: application/json" \
-  -d '{"API_KEY": "{{API_KEY}}",
-       "items": ["https://ipinfo.io/json", "https://ipinfo.io/json", "https://ipinfo.io/json", "https://ipinfo.io/json", "https://ipinfo.io/json", "https://ipinfo.io/json"],
-       "function": "https://github.com/NikolaiT/scrapeulous/blob/master/http.js",
-       "crawl_options": {
-          "request_timeout": 20000,
-          "random_user_agent": true
-       },
-       "max_items_per_second": 1.0 }'
+node ctrl.js --action create_test_task
 ```
 
-and after a couple of moments the task should be finished and we can download the results from the S3 storage with the following Api call:
+and after a couple of moments the task should be finished and we can download the results from the S3 storage with the following Api command:
 
 ```bash
 curl -k https://"$MASTER_IP":9001/results/5ea5591a5e3cf90007602e46?API_KEY="$API_KEY"&sample_size=5&recent=1

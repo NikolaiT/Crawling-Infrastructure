@@ -118,11 +118,6 @@ const default_config: Config = {
       ip: '52.204.14.197',
       used: false,
     },
-    {
-      eid: 'eipalloc-0ca6f6efc3b2d244f',
-      ip: '52.7.191.184',
-      used: false,
-    },
   ],
   force_remove_machines: false,
   debug_info_threshold: 0.1,
