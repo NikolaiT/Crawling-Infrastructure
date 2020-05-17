@@ -5,8 +5,8 @@ This software allows you to crawl and scrape the Internet in scale.
 It supports basic crawling via http as well as sophisticated crawling with the help
 of a heavily customized headless chrome browser controlled via puppeteer.
 
-The aim is to be able to scrape/crawl websites that try to block so called 
-robots. In our opinion, as long as the overall network throughput is conservative and 
+The aim is to be able to scrape/crawl websites that try to block so called
+robots. In our opinion, as long as the overall network throughput is conservative and
 the crawler doesn't drain any resources and is placing an burden on websites, it should be allowed to
 extract information from **public datasets**.
 
@@ -16,7 +16,7 @@ If you want to get access to data crawled by plain http requests, please have a 
 
 ## Vision
 
-The vision of this project is to provide a open-source, general purpose crawling infrastructure that enables it's users to 
+The vision of this project is to provide a open-source, general purpose crawling infrastructure that enables it's users to
 
 - crawl any website by specifying a simple crawling function ([Examples](https://github.com/NikolaiT/scrapeulous))
 - crawl with distributed machines
@@ -37,7 +37,7 @@ Crawling soon becomes a very complicated endeavour. There are a couple of sub pr
 
 ### Cat and mouse game between bots and anti-bot companies
 
-The basic goal is to make your crawler indistinguishable from a human that controls a browser. This is a very 
+The basic goal is to make your crawler indistinguishable from a human that controls a browser. This is a very
 complicated task, since anti-bot companies observe and process a wide variety of data such as:
 
 + IP addresses and geolocation (mobile, data-center, residential IP address?)
@@ -55,9 +55,9 @@ We don't want to impose a burden on websites, we just want fair access to data.
 Crawling is distributed onto several machines/servers. Therefore, there needs to be some kind of advanced algorithms that
 handles queues and schedules new tasks in an efficient way to avoid potential bottlenecks.
 
-### Infrastructure 
+### Infrastructure
 
-Crawling endpoints must be able to be allocated fully automatic and based on crawling requirements. Furthermore, the cheapest server infrastructure must be rented (currently AWS Spot instances I guess). 
+Crawling endpoints must be able to be allocated fully automatic and based on crawling requirements. Furthermore, the cheapest server infrastructure must be rented (currently AWS Spot instances I guess).
 
 As an alternative, crawling endpoints can be run on serverless cloud computing providers such as AWS Lambda or Microsoft Azure Functions to obtain scalability and avoid fixed costs.
 
@@ -79,7 +79,7 @@ I need a lot of help with the following issues:
     - Integrate intelligence of the [research paper from Antoine Vastel et al.](https://hal.inria.fr/hal-02441653/document)
     - Make use of newest contributions from [puppeteer-stealth](https://github.com/berstend/puppeteer-extra/tree/master/packages/puppeteer-extra-plugin-stealth)
     - Use some detection evavsion techniques from the no longer maintained [headless-chrome-crawler](https://github.com/yujiosaka/headless-chrome-crawler)   
-    
+
 2. Use the most recent version of chromium & puppeteer in AWS Lambda and Azure Functions with the package [chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) [done]
 
 3. Testing, testing, testing! Test the code base much better and expand *worker* tests such as found here: `crawler/test/`
@@ -122,7 +122,7 @@ node dist/scheduler/daemon.js --conf scheduler/scheduler.conf.json
 
 ## Worker
 
-This is the actual crawling software. The crawling software either runs within a docker swarm cluster, kubernetes cluster or on AWS Lambda or Google Cloud Functions or Azure Functions. It's up to you. 
+This is the actual crawling software. The crawling software either runs within a docker swarm cluster, kubernetes cluster or on AWS Lambda or Google Cloud Functions or Azure Functions. It's up to you.
 
 Upload the crawler to AWS lambda them with:
 
@@ -140,37 +140,38 @@ npm install -g serverless
 
 This tutorial is divided into two parts.
 
-1. Install the distributed crawling infrastructure
-2. Start a crawl task that will crawl the html of the top 10.000 websites and store the (cleaned) html in the cloud. For the top 10k websites, we use the [tranco list](https://tranco-list.eu/): A Research-Oriented Top Sites Ranking Hardened Against Manipulation. This list offers several improvements over the old Alexa top 1M website ranking list. For more information, visit their website.
-2.1 Run some business logic on the stored html files. Example: Extract all urls from the html documents. Or: Run some analytics on the meta elements.
+1. Install the distributed crawling infrastructure within the AWS infrastructure
+2. Start a crawl task that will crawl the html of the top 10.000 websites and store the cleaned html in the cloud. For the top 10k websites, we use the scientific [tranco list](https://tranco-list.eu/): A Research-Oriented Top Sites Ranking Hardened Against Manipulation. This list offers several improvements over the old Alexa top 1M website ranking list. For more information, please visit their website.
+3. As a concluding task, we run business logic on the stored html files. Example: Extract all urls from the html documents. Or: Run some analytics on the meta elements.
 
-In order to follow this tutorial, you will at least require an 
+In order to follow this tutorial, you will at least require an
 AWS account. We will make use of the following AWS services:
 
 + AWS Lambda as a crawling backend
 + AWS S3 to store crawled html data
-+ AWS EC2 as a master server that schedules the crawl task
++ An AWS EC2 instance used as a master server that schedules the crawl task and hosts the mongodb that we use a queue
 
 
 ### Setting up the infrastructure
 
 First we need to install a Ubuntu 18.04 server on Amazon AWS EC2 with docker support. Additionally, we will assign a elastic IP address to this instance.
 
-So we login to our AWS console and go to Services -> EC2 and then we press the Button *Launch Instance* and search for *ami-0fc20dd1da406780b* which is the AMI for Ubuntu 18.04 LTS.
+Therefore, we login to our AWS console and go to Services -> EC2 and then we press the Button *Launch Instance* and search for *ami-0fc20dd1da406780b* which is the AMI for Ubuntu 18.04 LTS.
 
-We will select this Ami image and select the size `t2.medium` (2vCPU and 4GiB memory).
+We will select this AMI image and select the size `t2.medium` (2vCPU and 4GiB memory).
 
 This is what you should see after this step:
 ![alt text](docs/images/ec2_setup.png "Logo Title Text 1")
 
-Then we click on **launch** and for the last step we have to create a key pair to access our instance. We download this PEM file and store it for later.
+Then we click on **launch** and for the last step we have to create a key pair to access our instance. We download this PEM file and store it on our local file system for later.
 
 Before we can access our instance, we assign an elastic IP address to our launched instance.
 
-We navigate to Services -> EC2 -> Elastic IPs and we click on **Allocate Elastic IP address
-** and we create a new elastic IP from Amazon's pool. Then we assign this elastic IP address to the previously created EC2 instance. You should note this public IP address. Let's assume this IP address is: `3.22.191.249`
+We navigate to Services -> EC2 -> Elastic IPs and we click on **Allocate Elastic IP address** and we create a new elastic IP from Amazon's pool. Then we assign this elastic IP address to the previously created EC2 instance. You should write down this public IP address. Let's assume this IP address is: `3.22.191.249`.
 
 As a last step, we assign a permissive Security Group to the allocated instance. In my case, I just allowed all traffic from all sources on all port ranges by default. It's not really secure, but I will destroy the instance anyway after a couple of hours.
+
+If you want to restrict TCP/IP traffic with the firewall, the following ports need to be open: 22, 80, 9001, 8080.
 
 Now that our instance is launched, we can access it with the following shell command
 
@@ -186,7 +187,7 @@ Create a user for the master server.
 
 ```bash
 # become root user
-sudo su 
+sudo su
 
 adduser master
 
@@ -195,9 +196,7 @@ usermod -aG sudo master
 su - master
 ```
 
-Install docker and docker swarm with:
-
-See Instructions here: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04
+Install docker and docker swarm with instructions to be found here: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04
 
 check that docker is correctly installed
 
@@ -248,7 +247,7 @@ export REMOTE_MASTER_DIR=/home/master/master/
 export REMOTE_LIBRARY_DIR=/home/master/lib/
 ```
 
-on the server, we create the directories with 
+on the server, we create the directories with
 
 ```bash
 mkdir -p /home/master/master/
@@ -257,11 +256,13 @@ mkdir -p /home/master/lib/
 ```
 
 Now we update the environment configuration file for the master server in production mode. This environment file includes
-all the settings that the master server needs to work properly. We edit the file `env/skeleton_production.env` and fill out the missing variables and parameters. The file is commented and should be self explanatory. As a last step, we rename the file from `env/skeleton_production.env` to `env/production.env`. We do the same for the file `env/skeleton_development.env`.
+all the settings that the master server needs to work properly. We edit the file `env/skeleton_production.env` and fill out the missing variables and parameters.
+
+The file is commented and should be self explanatory. As a last step, we rename the file from `env/skeleton_production.env` to `env/production.env`. We do the same for the file `env/skeleton_development.env`.
 
 As an example, we go step by step through the environment file `env/skeleton_production.env`:
 
-First, 
+First,
 
 Now we are ready to deploy the project with the commands:
 
