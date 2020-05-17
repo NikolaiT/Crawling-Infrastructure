@@ -1,5 +1,6 @@
-SSH_KEYFILE=/home/nikolai/.ssh/root_new_server
+SCRIPT=`realpath $0`
+SCRIPTPATH=`dirname $SCRIPT`
 
-export $(grep -v '^#' env/production.env | xargs -0);
+export $(grep -v '^#' $SCRIPTPATH/env/deploy.env | xargs -0);
 
-ssh -i $SSH_KEYFILE root@$MASTER_IP
+ssh -i $PEMFILE $SERVER

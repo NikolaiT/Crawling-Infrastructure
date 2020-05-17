@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# create project structure if it doesn't exist
+mkdir -p master/
+mkdir -p lib/
+
 # free up some space on the system
 docker system prune -f
 

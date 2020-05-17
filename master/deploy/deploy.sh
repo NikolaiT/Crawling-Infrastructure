@@ -3,7 +3,7 @@
 SCRIPT=`realpath $0`
 SCRIPTPATH=`dirname $SCRIPT`
 
-source $SCRIPTPATH/env/deploy.env
+export $(grep -v '^#' $SCRIPTPATH/env/deploy.env | xargs -0);
 
 EXCLUDE_FILE=$SCRIPTPATH/exclude.txt
 LOCAL_SRC=`dirname $SCRIPTPATH`/

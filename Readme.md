@@ -33,7 +33,7 @@ However, some people would want to quickly have a service that lets them scrape 
 
 ## Technical Introduction
 
-Crawling soon becomes a very complicated endeavour. There are a couple of sub problems:
+Crawling soon becomes a very complicated endeavor. There are a couple of sub problems:
 
 ### Cat and mouse game between bots and anti-bot companies
 
@@ -138,36 +138,47 @@ npm install -g serverless
 
 ## Tutorial
 
-This tutorial is divided into two parts.
+You want to run your own crawling infrastructure? That is only necessary if you have at least the following resources:
 
-1. Install the distributed crawling infrastructure within the AWS infrastructure
-2. Start a crawl task that will crawl the html of the top 10.000 websites and store the cleaned html in the cloud. For the top 10k websites, we use the scientific [tranco list](https://tranco-list.eu/): A Research-Oriented Top Sites Ranking Hardened Against Manipulation. This list offers several improvements over the old Alexa top 1M website ranking list. For more information, please visit their website.
-3. As a concluding task, we run business logic on the stored html files. Example: Extract all urls from the html documents. Or: Run some analytics on the meta elements.
+1. You have a AWS/Azure/Google Cloud account
+2. You have the requirements to execute long running crawl tasks over hundred thousand and millions of items
+3. You know the implications of what you are doing
 
-In order to follow this tutorial, you will at least require an
-AWS account. We will make use of the following AWS services:
+This tutorial is divided into three parts.
+
+1. Install the distributed crawling infrastructure within the AWS cloud infrastructure
+2. Start a crawl task that will crawl the Html of the top 10.000 websites and store the cleaned Html documents on s3. For the top 10k websites, we use the scientific [tranco list](https://tranco-list.eu/): A Research-Oriented Top Sites Ranking Hardened Against Manipulation. This list offers several improvements over the old Alexa top 1M website ranking list. For more information, please visit their website.
+3. As a concluding task, we run business logic on the stored Html files. Example: Extract all urls from the Html documents. Or: Run some analytics on the meta elements.
+
+In order to follow this tutorial, you will at least **require an
+AWS account**. We will make use of the following AWS services:
 
 + AWS Lambda as a crawling backend
-+ AWS S3 to store crawled html data
++ AWS S3 to store crawled Html data
 + An AWS EC2 instance used as a master server that schedules the crawl task and hosts the mongodb that we use a queue
 
 
 ### Setting up the infrastructure
 
+All actions are performed in the AWS web dashboard and we choose the region **us-east-1 (north Virgina)**.
+
 First we need to install a Ubuntu 18.04 server on Amazon AWS EC2 with docker support. Additionally, we will assign a elastic IP address to this instance.
 
-Therefore, we login to our AWS console and go to Services -> EC2 and then we press the Button *Launch Instance* and search for *ami-0fc20dd1da406780b* which is the AMI for Ubuntu 18.04 LTS.
+Therefore, we login to our AWS console and go to Services -> EC2 and then we press the Button *Launch Instance* and search for *Ubuntu 18.04 LTS* on the **AWS Marketplace** tab.
 
-We will select this AMI image and select the size `t2.medium` (2vCPU and 4GiB memory).
+We select the Ubuntu 18.04 LTS - Bionic image. This is what you should see:
+![alt text](docs/images/ami_instance.png "Ami Instance Selection")
 
-This is what you should see after this step:
+We will select this AMI image and select the machine size of `t2.medium` (2vCPU and 4GiB memory). Maybe it's also possible to use the size `t2.small`, I haven't tested it so far.
+
+This is what you should see after setting up the instance:
 ![alt text](docs/images/ec2_setup.png "Logo Title Text 1")
 
-Then we click on **launch** and for the last step we have to create a key pair to access our instance. We download this PEM file and store it on our local file system for later.
+Then we click on **launch** and for the last step we have to create a key pair to access our instance. We download this PEM file and store it on our local file system for later (I named the PEM file `tutorial.pem`).
 
 Before we can access our instance, we assign an elastic IP address to our launched instance.
 
-We navigate to Services -> EC2 -> Elastic IPs and we click on **Allocate Elastic IP address** and we create a new elastic IP from Amazon's pool. Then we assign this elastic IP address to the previously created EC2 instance. You should write down this public IP address. Let's assume this IP address is: `3.22.191.249`.
+We navigate to Services -> EC2 -> Elastic IPs and we click on **Allocate Elastic IP address** and we create a new elastic IP from Amazon's pool. Then we assign this elastic IP address to the previously created EC2 instance. You should remember this public IP address for the remainder of the tutorial. Let's assume this IP address is: `34.193.81.78`.
 
 As a last step, we assign a permissive Security Group to the allocated instance. In my case, I just allowed all traffic from all sources on all port ranges by default. It's not really secure, but I will destroy the instance anyway after a couple of hours.
 
@@ -176,14 +187,28 @@ If you want to restrict TCP/IP traffic with the firewall, the following ports ne
 Now that our instance is launched, we can access it with the following shell command
 
 ```bash
-chmod 0700 ~/keypairs/crawling_tutorial.pem
+chmod 0700 ~/keypairs/tutorial.pem
 
-ssh -i ~/keypairs/crawling_tutorial.pem root@3.22.191.249
+ssh -i ~/keypairs/tutorial.pem ubuntu@34.193.81.78
 ```
 
-### On the Server
+### Creating AWS keys for production
 
-Create a user for the master server.
+The crawling infrastructure needs AWS Api keys for AWS Lambda and s3 in order to work properly.
+
+In the AWS Dashboard, go to Services -> IAM and create a new user with the name *crawling-user* and add the property *programmatic access*.
+
+Click on the tab *Attach existing policies directly* and add the following access policies:
+
++ AWSLambdaFullAccess
++ AmazonS3FullAccess
++ CloudWatchFullAccess
+
+As the last step, download the generated `credentials.csv` file. Store this credentials file for later.
+
+### Commands on the Server
+
+Create a user for the master server. In this tutorial, we will use the user `ubuntu` for deploying the crawl master server.
 
 ```bash
 # become root user
@@ -196,7 +221,7 @@ usermod -aG sudo master
 su - master
 ```
 
-Install docker and docker swarm with instructions to be found here: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04
+As a next step, [Install docker and docker swarm with digitalocean instructions](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-18-04).
 
 check that docker is correctly installed
 
@@ -204,15 +229,21 @@ check that docker is correctly installed
 sudo systemctl status docker
 ```
 
-Add the user to the docker group:
+Add the `ubuntu` user to the docker group:
 
 ```bash
-sudo usermod -aG docker master
+sudo usermod -aG docker ubuntu
+
+# confirm adding the user was a success
+# logout/login first
+id -nG
 ```
 
-#### Installing node and typescript
+#### Installing nodejs, yarn and typescript on the server
 
-Installing Node tutorial: https://linuxize.com/post/how-to-install-node-js-on-ubuntu-18.04/
+Installing Node on Ubuntu 18.04 tutorial: https://linuxize.com/post/how-to-install-node-js-on-ubuntu-18.04/
+
+The following commands need to be executed:
 
 ```bash
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
@@ -235,48 +266,143 @@ tsc --version
 Version 3.8.3
 ```
 
-### Deploy the Master server
-
-Now we need to configure the deployment. We create an `deploy.env` file by creating a file with the following contents.
+Then we install yarn with the [following instructions](https://classic.yarnpkg.com/en/docs/install/#debian-stable):
 
 ```bash
-export SERVER=ubuntu@3.22.191.249
-export PEMFILE=/path/to/pemfile.pem
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 
-export REMOTE_MASTER_DIR=/home/master/master/
-export REMOTE_LIBRARY_DIR=/home/master/lib/
+sudo apt update && sudo apt install yarn
+
+yarn --version
 ```
 
-on the server, we create the directories with
+### Clone the project and install & compile
+
+Go to cozy place on your local file system and download the crawling infrastructure project with the command:
 
 ```bash
-mkdir -p /home/master/master/
+git clone https://github.com/NikolaiT/Crawling-Infrastructure.git
 
-mkdir -p /home/master/lib/
+cd Crawling-Infrastructure/
+```
+
+Now compile the project locally. We need to have a recent node version installed for that. Then we install typescript globally with the command
+
+```bash
+sudo npm install -g typescript
+```
+
+Now we are ready to install & compile the project locally:
+
+```bash
+cd master/
+
+npm install
+
+# switch to the library and install and compile it first!
+cd ../lib/
+tsc
+
+# go back to the master and compile it
+cd ../master/
+tsc
+```
+
+After that step, the crawling infrastructure should be compiled successfully.
+
+### Deploy the Master server
+
+Now we need to configure the deployment. We edit the file `master/deploy/env/deploy.env` file by specifying the following contents.
+
+```bash
+# edit the IP address of the AWS EC2 instance that you just created
+export SERVER=master@34.193.81.78
+export PEMFILE=/path/to/saved/pemfile.pem
+
+# those are the paths to the deployed crawling infrastructure
+# on the remote master server
+export REMOTE_MASTER_DIR=/home/ubuntu/master/
+export REMOTE_LIBRARY_DIR=/home/ubuntu/lib/
 ```
 
 Now we update the environment configuration file for the master server in production mode. This environment file includes
-all the settings that the master server needs to work properly. We edit the file `env/skeleton_production.env` and fill out the missing variables and parameters.
+all the settings that the master server scheduler & Api need in order to work properly. We edit the file `master/env/skeleton_production.env` and edit the missing variables and parameters.
 
-The file is commented and should be self explanatory. As a last step, we rename the file from `env/skeleton_production.env` to `env/production.env`. We do the same for the file `env/skeleton_development.env`.
+For example, our environment file would look similar to this:
 
-As an example, we go step by step through the environment file `env/skeleton_production.env`:
+```env
+NODE_ENV=production
 
-First,
+AWS_ACCESS_KEY=awsAccessKeyGeneratedPreviously
+AWS_SECRET_KEY=awsSecretKeyGeneratedPreviously
+AWS_REGION=us-east-1
 
-Now we are ready to deploy the project with the commands:
+API_PORT=9001
+API_HOST=0.0.0.0
+
+CRAWL_WORKER_PORT=3333
+
+MONGO_INITDB_ROOT_USERNAME=admin
+MONGO_INITDB_ROOT_PASSWORD=someSuperSecureMongoDBPassword
+
+MONGO_DATA_DIR=/data/db
+MONGO_TEST_DATA_DIR=/data/test_db
+MONGO_LOG_FILE=/var/log/mongodb/mongodb.log
+
+MONGODB_CONNECTION_URL=mongodb://admin:someSuperSecureMongoDBPassword@34.193.81.78/
+
+MASTER_IP=34.193.81.78
+
+API_URL=https://34.193.81.78:9001/
+API_KEY=someCrawlingInfraApiKey
+DEMO_API_KEY=someDemoCrawlingInfraApiKey
+
+DOCKER_STACK_NAME=Master
+
+USE_REMOTE_DB=1
+```
+
+As a last step, we rename the file from `master/env/skeleton_production.env` to `master/env/production.env`.
+
+Also, create an empty `master/env/development.env` file. It is required by docker swarm.
+
+Now we are ready to deploy the project to our recently created master server with the commands:
 
 ```bash
 cd master
 
-./loadenv.sh
-
 ./deploy/deploy.sh deploy
+```
+
+The above command will compile the source code locally and deploy to the remote server and initialize a docker swarm there.
+
+Now we have to create a default configuration on master server with the following commands:
+
+```bash
+export $(grep -v '^#' env/production.env | xargs -0);
+node ctrl.js --action cfg --what create
+```
+
+You can test if deployment was successful by executing the following command:
+
+```bash
+
+$ ./deploy/test.sh
+https://34.193.81.78:9001/
+{
+  "scheduler_uptime": "",
+  "scheduler_version": "v1.3",
+  "api_version": "1.0.2",
+  "machines_allocated": 0,
+  "http_machines_allocated": 0,
+  "num_total_items": 0,
+  "num_tasks": 0
 ```
 
 #### Deploying the crawler to AWS Lambda
 
-As a last deployment step, we need to deploy our crawler to AWS Lambda. [AWS Lambda](https://aws.amazon.com/de/lambda/) is a serverless computational service that lets you run your code for a maximum of five minutes. The AWS Lambda Api offers scalability and a pay-per-used-resources billing scheme. Without AWS Lambda, we would need to rent our own VPS servers to do the actual crawling work. This is also supported by this software, but for the sake of this tutorial we will use AWS Lambda.
+As a last deployment step, we need to deploy our crawler to AWS Lambda. [AWS Lambda](https://aws.amazon.com/de/lambda/) is a serverless computational service that lets you run your code for a maximum of five minutes. The AWS Lambda Api offers scalability and a pay-per-used-resources billing scheme. Without AWS Lambda, we would need to rent our own VPS servers to do the actual crawling work. Controlling own crawling servers is also supported by this projected, but for the sake of this tutorial we will use AWS Lambda as crawling backend.
 
 First we switch the directory to `worker/`.
 
@@ -294,9 +420,9 @@ sudo npm install -g typescript
 
 Then we have to define to what regions we want to deploy our functions to. Update the file `crawler/deploy_all.js` and edit the functions starting on line 20 of the script.
 
-```js
+```JavaScript
 function deploy_crawl_worker() {
-    console.log(systemSync(`npm run build`));
+    console.log(systemSync('npm run build'));
 
     let regions = [
         'us-west-1',
@@ -363,7 +489,7 @@ curl -k "$API_URL"task/ \
 and after a couple of moments the task should be finished and we can download the results from the S3 storage with the following Api call:
 
 ```bash
-curl -k https://167.99.241.135:9001/results/5ea5591a5e3cf90007602e46?API_KEY="$API_KEY"&sample_size=5&recent=1
+curl -k https://"$MASTER_IP":9001/results/5ea5591a5e3cf90007602e46?API_KEY="$API_KEY"&sample_size=5&recent=1
 ```
 
 ### Creating the Top 10k crawl task
