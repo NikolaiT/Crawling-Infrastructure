@@ -4,8 +4,8 @@
   "version": "1.0.2",
   "description": "The master schedules crawling tasks with intelligent queuing and accepts new tasks over an REST API",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/NikolaiT/Crawling-Infrastructure"
+    "type": "git",
+    "url": "https://github.com/NikolaiT/Crawling-Infrastructure"
   },
   "keywords": [
     "scheduling",
@@ -36,6 +36,7 @@
     "app-root-path": "^3.0.0",
     "aws-sdk": "^2.668.0",
     "body-parser": "^1.19.0",
+    "cheerio": "^1.0.0-rc.3",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.4",
     "cors": "^2.8.5",

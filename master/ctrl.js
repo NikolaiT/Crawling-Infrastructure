@@ -4,6 +4,7 @@ const argv = require('yargs').argv;
 var got = require('got');
 var fs = require('fs');
 const { execSync } = require('child_process');
+require('dotenv').config({ path: 'env/production.env' });
 
 if (!process.env.API_URL || !process.env.API_KEY) {
   console.error('Please export API_URL and API_KEY to the env.');
@@ -240,7 +241,8 @@ function systemSync(cmd) {
       case 'create_10k_task':
         let test_task = {
          "items": "https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/items/top10k.txt",
-         "function": "https://github.com/NikolaiT/scrapeulous/blob/master/http.js",
+         "function": "https://github.com/NikolaiT/scrapeulous/blob/master/http_clean.js",
+         "storage_policy": "itemwise",
          "crawl_options": {
             "request_timeout": 20000,
             "random_user_agent": true

@@ -13,14 +13,14 @@
     "web-scraping"
   ],
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/NikolaiT/Crawling-Infrastructure"
+    "type": "git",
+    "url": "https://github.com/NikolaiT/Crawling-Infrastructure"
   },
   "homepage": "https://scrapeulous.com/",
   "author": "Nikolai Tschacher <contact@scrapeulous.com> (https://scrapeulous.com)",
   "license": "GNU AFFERO GENERAL PUBLIC LICENSE",
   "devDependencies": {
-    "@types/mongoose": "^5.7.14",
+    "@types/mongoose": "^5.7.20",
     "@types/node": "^13.1.4",
     "tslib": "^1.11.1",
     "typescript": "^3.7.4"

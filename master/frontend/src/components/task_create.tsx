@@ -330,7 +330,7 @@ export class TaskCreate extends React.Component<{form: any}, {redirect: boolean,
               </Tooltip>
             </span>
         }>
-          {getFieldDecorator('storage_policy', {})(
+          {getFieldDecorator('storage_policy', {initialValue: 'itemwise'})(
             <Select placeholder="Please select the storage_policy">
               <Option value="itemwise">itemwise</Option>
               <Option value="merged">merged</Option>
