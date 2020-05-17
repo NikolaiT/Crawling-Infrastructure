@@ -363,6 +363,11 @@ DOCKER_STACK_NAME=Master
 USE_REMOTE_DB=1
 ```
 
+The variables **AWS_ACCESS_KEY** and **AWS_SECRET_KEY** contain the AWS credentials that we created in the earlier step.
+The variables **MONGO_INITDB_ROOT_USERNAME** and **MONGO_INITDB_ROOT_PASSWORD** are the credentials for the mongodb database.
+
+You can choose arbitrary credentials for the variables **MONGO_INITDB_ROOT_PASSWORD**, **API_KEY** and **DEMO_API_KEY**.
+
 As a last step, we rename the file from `master/env/skeleton_production.env` to `master/env/production.env`.
 
 Also, create an empty `master/env/development.env` file. It is required by docker swarm.
@@ -402,7 +407,7 @@ https://34.193.81.78:9001/
 
 #### Deploying the crawler to AWS Lambda
 
-As a last deployment step, we need to deploy our crawler to AWS Lambda. [AWS Lambda](https://aws.amazon.com/de/lambda/) is a serverless computational service that lets you run your code for a maximum of five minutes. The AWS Lambda Api offers scalability and a pay-per-used-resources billing scheme. Without AWS Lambda, we would need to rent our own VPS servers to do the actual crawling work. Controlling own crawling servers is also supported by this projected, but for the sake of this tutorial we will use AWS Lambda as crawling backend.
+As a last deployment step, we need to deploy our crawler to AWS Lambda. [AWS Lambda](https://aws.amazon.com/de/lambda/) is a serverless computational service that lets you run your code for a maximum of five minutes. The AWS Lambda Api offers scalability and a pay-per-used-resources billing scheme. Without AWS Lambda, we would need to rent our own VPS servers to do the actual crawling work. Controlling own crawling servers is also supported by this project, but for the sake of this tutorial we will use AWS Lambda as crawling backend.
 
 First we switch the directory to `worker/`.
 
