@@ -418,8 +418,8 @@ describe('defect worker will save debug info when config is set', async () => {
 
     let i = 0;
     for (let res of response.result) {
-      expect(res.result.screen_b64).to.have.length.above(50000);
-      expect(res.result.document).to.have.length.above(50000);
+      expect(res.result.screen_b64).to.have.length.above(5000);
+      expect(res.result.document).to.have.length.above(5000);
       fs.writeFileSync(`test/screens/fail${i++}.png`, Buffer.from(res.result.screen_b64, 'base64'));
     }
 

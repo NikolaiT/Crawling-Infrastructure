@@ -13,5 +13,5 @@ then
 fi
 
 echo "[DOCKER] Starting worker server"
-node dist/crawl_worker/src/server/server.js
+node dist/crawler/src/server/server.js
 exit 0

@@ -6,8 +6,8 @@ import {system} from '@lib/misc/shell';
 import {sleep} from '@lib/misc/helpers';
 
 export const metadata_keys = ['avg_items_per_second', 'num_items_crawled',
-  'elapsed_crawling_ms', 'elapsed_ms', 'started', 'num_proxies_obtained',
-  'ended', 'crawling_ended', 'crawling_started', 'bytes_uploaded', 'num_items_failed', 'items'];
+  'elapsed_crawling_ms', 'elapsed_ms', 'started', 'num_proxies_obtained', 'items',
+  'ended', 'crawling_ended', 'crawling_started', 'bytes_uploaded', 'num_items_failed', 'worker_status'];
 
 export const test_urls = ['https://scrapeulous.com', 'https://google.com', 'https://bing.com'];
 
@@ -53,7 +53,7 @@ export async function endpoint(body: any, endpoint: string, method='POST', api_u
   } catch (error) {
     // dont print whole Got stack
     console.error(`Got request to ${full_url} failed with Error: ${error.message}`);
-    console.error(error);
+    console.error(error.message);
   }
 }
 
@@ -127,7 +127,7 @@ export async function beforeTest(num_tasks: number = 0, env: Array<string> = [])
     let response  = await system(cmd);
     console.log(`Image id: ${await getImageId()}`);
     // starting the server in the background takes a few seconds,
-    await sleep(5000);
+    await sleep(3500);
     console.log(`Crawler should be online on http://localhost:4444/`);
   }
 

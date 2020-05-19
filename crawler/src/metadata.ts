@@ -98,7 +98,11 @@ export class MetadataHandler {
     this.elapsed_ms = this.ended.valueOf() - this.started.valueOf();
     this.logger.info(`Elapsed time: ${this.elapsed_ms}ms, elapsed crawling time: ${this.elapsed_crawling_ms}ms`);
     const member_names = Object.keys(this) as Array<keyof MetadataHandler>;
-    const exclude = ['config', 'logger', 'items'];
+    let exclude = ['config', 'logger', 'items'];
+
+    if (this.config.local_test) {
+      exclude = ['config', 'logger'];
+    }
 
     for (let name of member_names) {
       if (!exclude.includes(name)) {
