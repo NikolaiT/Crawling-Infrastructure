@@ -1,6 +1,7 @@
 import {LogLevel} from "@lib/misc/logger";
 import {ProxyOptions} from "@lib/types/proxy";
 import {IAWSConfig} from "@lib/storage/storage";
+import {downloadMaybeGzipped} from "@lib/misc/http";
 import {ResultPolicy, ExecutionEnv, StoragePolicy} from '@lib/types/common';
 
 export interface ICookie {
@@ -51,6 +52,8 @@ export interface HttpWorkerConfig {
   compress: boolean;
   // the function to be executed as code
   function_code: string;
+  // an url to the function to be executed as code
+  function_url: string;
   // all requests are done with this user agent
   user_agent: string;
   // http headers that are set on Got and pptr
@@ -227,6 +230,16 @@ export class CrawlConfig {
 
     if (Array.isArray(this.config.proxies) && this.config.proxies.length > 0) {
       this.config.proxy_options = undefined;
+    }
+
+    if (this.config.function_url) {
+      (async () => {
+        try {
+          this.config.function_code = await downloadMaybeGzipped(this.config.function_url);
+        } catch (err) {
+          console.error(`Cannot download function code from url ${this.config.function_url}: ${err}`);
+        }
+      });
     }
 
     return this.config;

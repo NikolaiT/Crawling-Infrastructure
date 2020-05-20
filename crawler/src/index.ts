@@ -109,6 +109,11 @@ export class WorkerHandler {
    * Useful for testing the functionality of crawl_worker.
    */
   public async localCrawl() {
+    let region = '';
+    if (this.config.aws_config && this.config.aws_config.AWS_REGION) {
+      region = this.config.aws_config.AWS_REGION;
+    }
+
     for (let i: number = 0; i < this.config.items.length; i++) {
       this.items.push({
         _id: i.toString(),
@@ -117,7 +122,7 @@ export class WorkerHandler {
         crawled: null,
         retries: 0,
         error: '',
-        region: this.config.aws_config.AWS_REGION,
+        region: region,
       });
     }
     this.config.num_items_worker = this.items.length;
