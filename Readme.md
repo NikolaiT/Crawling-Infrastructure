@@ -31,6 +31,11 @@ This project is a open source tool and will remain a open source tool in the fut
 
 However, some people would want to quickly have a service that lets them scrape public data from Google or any other website. For this reason, we created the SaaS service [scrapeulous.com](https://scrapeulous.com/).
 
+## Architecture
+
+The architecture of the crawling infrastructure is quite complex and is summarized in the diagram below:
+![architecture of the crawling infrastructure](docs/images/arch_diagram.png "architecture")
+
 ## Technical Introduction
 
 Crawling soon becomes a very complicated endeavor. There are a couple of sub problems:
