@@ -109,6 +109,9 @@ export class Controller {
     // create a new crawl task
     this.app.route('/task').post(auth, this.task_service.createCrawlTask.bind(this.task_service));
 
+    // get items mapping
+    this.app.route('/mapping/:id').get(auth, this.task_service.getMapping.bind(this.task_service));
+
     // invoke backend directly without queue and scheduler interference
     this.app.route('/crawl').post(api_key_given, this.api_service.crawl.bind(this.api_service));
 

@@ -20,7 +20,7 @@
   "author": "Nikolai Tschacher <contact@scrapeulous.com> (https://scrapeulous.com)",
   "license": "GNU AFFERO GENERAL PUBLIC LICENSE",
   "devDependencies": {
-    "@types/mongoose": "^5.7.20",
+    "@types/mongoose": "^5.7.21",
     "@types/node": "^13.1.4",
     "tslib": "^1.11.1",
     "typescript": "^3.7.4"

@@ -309,6 +309,25 @@ export class CrawlTaskService {
     return;
   }
 
+  public async getMapping(req: Request, res: Response) {
+    let task = await getTaskById(req, res, this.task_handler);
+    if (!task) {
+      return null;
+    }
+
+    try {
+      let mapping = {};
+      let queue_handler = new QueueHandler(task.queue);
+      let queue_id_to_item_mapping = await queue_handler.getQueueItems({}, 'id item');
+      for (let obj of queue_id_to_item_mapping) {
+        mapping[obj['_id']] = obj['item'];
+      }
+      return res.json(mapping);
+    } catch (err) {
+      return res.status(400).send({error: `cannot get item mapping: ${err}`});
+    }
+  }
+
   /**
    * What we want is an array of
    *
@@ -350,47 +369,29 @@ done`;
       // create node script that downloads s3 results
       // and then merges the files
       if (how === 'mergeScript') {
-        let rename_items: boolean = !this.taskTooLargeForDownload(task);
-        this.logger.info(`Renaming items via queue access: ${rename_items}`);
+        let inline_mapping: boolean = !this.taskTooLargeForDownload(task);
+        this.logger.info(`Renaming items via queue access: ${inline_mapping}`);
         let s3_urls: string = '';
         let mapping = {};
         for (let region of task.regions) {
           s3_urls += `"s3://${region.bucket}/${task_id}", `;
         }
 
-        if (rename_items) {
+        let mapping_code;
+
+        if (inline_mapping) {
           let queue_handler = new QueueHandler(task.queue);
           let queue_id_to_item_mapping = await queue_handler.getQueueItems({}, 'id item');
           for (let obj of queue_id_to_item_mapping) {
             mapping[obj['_id']] = obj['item'];
           }
-        }
-
-        let parse_approach: string = '';
-        if (task.storage_policy === StoragePolicy.itemwise) {
-          parse_approach = `let item_id = path.basename(path_to_file);
-            let contents = fs.readFileSync(path_to_file);
-            let inflated = zlib.inflateSync(contents).toString();
-            `;
-          if (rename_items) {
-            parse_approach += 'obj[mapping.item_id] = JSON.parse(inflated);`;'
-          } else {
-            parse_approach += 'obj[item_id] = JSON.parse(inflated);`;'
-          }
-        } else if (task.storage_policy === StoragePolicy.merged) {
-          parse_approach = `let contents = fs.readFileSync(path_to_file);
-          let inflated = zlib.inflateSync(contents).toString();
-          let json_data = JSON.parse(inflated);
-          `;
-          if (rename_items) {
-            parse_approach += `let renamed = {};
-          for (let key in json_data) {
-            renamed[mapping[key]] = json_data[key];
-          }
-          Object.assign(obj, renamed);`;
-          } else {
-            parse_approach += 'Object.assign(obj, json_data);'
-          }
+          mapping_code = `let mapping = ${JSON.stringify(mapping)};`;
+        } else {
+          // translate items via Api Call
+          // inline mapping would be too large
+          let mapping_url = `${process.env.API_URL}mapping/${task.id}?API_KEY=${process.env.API_KEY}`;
+          mapping_code = `execSync('curl -k ${mapping_url} > json_results/mapping.json');
+let mapping = JSON.parse(fs.readFileSync('mapping.json'));`;
         }
 
         let script: string = `#!/usr/bin/env node
@@ -399,6 +400,7 @@ const execSync = require('child_process').execSync;
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const { EOL } = require('os');
 
 let version_check = execSync('aws --version');
 if (!version_check.includes('aws-cli')) {
@@ -406,9 +408,14 @@ if (!version_check.includes('aws-cli')) {
     process.exit(1);
 }
 
-let mapping = ${JSON.stringify(mapping)};
-
 execSync('mkdir -p /tmp/storage/');
+execSync('mkdir -p json_results/');
+
+// how many items per results file
+let chunk_size = 10000;
+
+${mapping_code}
+
 execSync(\`aws configure set aws_access_key_id ${process.env.AWS_ACCESS_KEY}\`);
 execSync(\`aws configure set aws_secret_access_key ${process.env.AWS_SECRET_KEY}\`);
 
@@ -432,20 +439,60 @@ function walk(dir, fileList = []) {
   return fileList;
 }
 
+function write_file(chunk, obj) {
+  let file_name = 'json_results/results_' + chunk + '.json';
+  fs.writeFileSync(file_name, JSON.stringify(obj, null, 2));
+  console.log('wrote chunk ' + chunk + ' to file ' + file_name);
+}
+
 (async () => {
     // all results should be downloaded. Merge and create JSON result file.
     let files = await walk('/tmp/storage/');
     console.log(\`downloaded \${files.length} files\`);
     let obj = {};
+    let i = 0;
+    let chunk = 0;
+    let n = 0;
+    let z = 0;
+    let failed = new Set();
     for (let path_to_file of files) {
         try {
-          ${parse_approach}
+          let contents = fs.readFileSync(path_to_file);
+          let inflated = zlib.inflateSync(contents).toString();
+          let json_data = JSON.parse(inflated);
+          for (let key in json_data) {
+            z++;
+            if ('error_message' in json_data[key] || 'error_trace' in json_data[key]) {
+              failed.add(mapping[key]);
+            } else {
+              obj[mapping[key]] = json_data[key];
+              mapping[key] = '__ok__';
+              i++;
+              n++;
+            }
+          }
         } catch (err) {
           console.error(err.toString());
         }
+        // see if we need to rotate the file
+        if (i >= chunk_size) {
+          chunk++;
+          write_file(chunk, obj);
+          obj = {};
+          i = 0;
+        }
     }
-    fs.writeFileSync('results.json', JSON.stringify(obj, null, 2));
-    console.log('wrote results to file results.json');
+    chunk++;
+    write_file(chunk, obj);
+    console.log('stored ' + z + ' items in total! ' + failed.size + ' items failed in total!');
+    let truly_failed = [];
+    for (key in mapping) {
+      if (mapping[key] !== '__ok__') {
+        truly_failed.push(mapping[key]);
+      }
+    }
+    console.log(truly_failed.length + '/' + n + ' items truly failed!');
+    fs.writeFileSync('json_results/failed.txt', truly_failed.join(EOL));
 })();`;
         return script;
       }
