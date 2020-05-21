@@ -34,7 +34,7 @@ However, some people would want to quickly have a service that lets them scrape 
 ## Architecture
 
 The architecture of the crawling infrastructure is quite complex and is summarized in the diagram below:
-![architecture of the crawling infrastructure](docs/images/arch_diagram.png "architecture")
+![architecture](docs/diagram/arch_diagram2.png "crawling infra")
 
 ## Technical Introduction
 
