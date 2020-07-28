@@ -20,7 +20,7 @@ function deploy_crawl_worker() {
     console.log(systemSync(`npm run build`));
 
     let regions = [
-        'us-west-1',
+        //'us-west-1',
         'us-west-2',
         'us-east-2',
         'us-east-1',
@@ -36,7 +36,8 @@ function deploy_crawl_worker() {
     ];
 
     for (let region of regions) {
-        console.log(systemSync(`sls deploy --region ${region} --aws-profile ${process.env.AWS_PROFILE} --verbose`));
+        // console.log(systemSync(`sls deploy --region ${region} --aws-profile ${process.env.AWS_PROFILE} --verbose`));
+        console.log(systemSync(`sls deploy --region ${region} --aws-profile ${process.env.AWS_PROFILE}`));
     }
 }
 
