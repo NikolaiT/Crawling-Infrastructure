@@ -93,7 +93,7 @@ export class WorkerHandler {
       result = await this.localCrawl();
     } else {
       if (!this.mongodb.connected) {
-        return this.meta.finalize(this.response, 'Unable to connect to mongodb', 400);
+        return this.meta.finalize(this.response, 'Unable to connect to mongodb.', 400);
       }
       result = await this.remoteCrawl();
     }

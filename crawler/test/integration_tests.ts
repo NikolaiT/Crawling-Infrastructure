@@ -315,7 +315,7 @@ describe('invalid-config', async () => {
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
 
     expect(response.metadata).to.include.keys(metadata_keys);
-    expect(response.message).to.include('Unable to connect to mongodb');
+    expect(response.message).to.include('Unable to connect to mongodb.');
     expect(response.status).to.equal(400);
   });
 });
@@ -337,7 +337,7 @@ describe('partly-invalid-config', async () => {
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
 
     expect(response.metadata).to.include.keys(metadata_keys);
-    expect(response.message).to.include('No items in queue. No work to do.');
+    expect(response.message).to.include('Unable to connect to mongodb.');
     expect(response.status).to.equal(200);
   });
 });

@@ -21,12 +21,13 @@ describe('google worker', async () => {
       aws_config: aws_config,
       execution_env: ExecutionEnv.docker,
       items: ['us election', 'travel restrictions'],
-      function: getFunc('google_scraper.js'),
+      function_code: getFunc('google_scraper.js'),
       task_id: '1',
       worker_id: 1,
       loglevel: 'info',
       result_policy: ResultPolicy.return,
       apply_evasion: false,
+      local_test: true,
     };
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
@@ -63,12 +64,13 @@ describe('bing worker', async () => {
       aws_config: aws_config,
       execution_env: ExecutionEnv.docker,
       items: ['us election', 'travel restrictions'],
-      function: getFunc('bing_scraper.js'),
+      function_code: getFunc('bing_scraper.js'),
       task_id: '1',
       worker_id: 1,
       loglevel: 'info',
       result_policy: ResultPolicy.return,
       apply_evasion: false,
+      local_test: true,
     };
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
@@ -106,12 +108,13 @@ describe('nytimes worker', async () => {
       aws_config: aws_config,
       execution_env: ExecutionEnv.docker,
       items: ['dummy'],
-      function: getFunc('nytimes.js'),
+      function_code: getFunc('nytimes.js'),
       task_id: '1',
       worker_id: 1,
       loglevel: 'info',
       result_policy: ResultPolicy.return,
       apply_evasion: false,
+      local_test: true,
     };
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);

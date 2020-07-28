@@ -309,6 +309,9 @@ export class CrawlTaskService {
     return;
   }
 
+  /*
+    mongoexport --uri="mongodb://mongodb0.example.com:27017/reporting"  --collection=events  --out=events.json [additional options]
+  */
   public async getMapping(req: Request, res: Response) {
     let task = await getTaskById(req, res, this.task_handler);
     if (!task) {
@@ -389,9 +392,14 @@ done`;
         } else {
           // translate items via Api Call
           // inline mapping would be too large
-          let mapping_url = `${process.env.API_URL}mapping/${task.id}?API_KEY=${process.env.API_KEY}`;
-          mapping_code = `execSync('curl -k ${mapping_url} > json_results/mapping.json');
-let mapping = JSON.parse(fs.readFileSync('mapping.json'));`;
+          let download_mapping_cmd = `mongoexport --authenticationDatabase admin --host ${process.env.MASTER_IP} --db CrawlMasterQueue --forceTableScan --jsonArray --fields="id,item" \
+              --username ${process.env.MONGO_INITDB_ROOT_USERNAME} --password ${process.env.MONGO_INITDB_ROOT_PASSWORD} --collection ${task.queue}  --out=json_results/mapping.json`
+          mapping_code = `execSync('${download_mapping_cmd}');
+let raw_mapping = JSON.parse(fs.readFileSync('json_results/mapping.json'));
+let mapping = {};
+for (let obj of raw_mapping) {
+  mapping[obj['_id']['$oid']] = obj['item'];
+}`;
         }
 
         let script: string = `#!/usr/bin/env node

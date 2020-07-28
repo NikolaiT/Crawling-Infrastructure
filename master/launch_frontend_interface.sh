@@ -24,4 +24,7 @@ api_key_encoded=$(urlencode "$API_KEY")
 api_url_encoded=$(urlencode "https://$MASTER_IP:9001")
 
 # launch chromium browser with frontend site
+
+echo "http://$MASTER_IP:8080/?master_api_key=$api_key_encoded&master_api_url=$api_url_encoded"
+
 chromium-browser "http://$MASTER_IP:8080/?master_api_key=$api_key_encoded&master_api_url=$api_url_encoded"
