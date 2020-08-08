@@ -24,7 +24,7 @@ export class PageError extends Error {
 }
 
 export class BrowserWorker extends BaseWorker {
-  browser: any;
+  browser: any | null;
   page: any;
   clipboardy: any;
   UserAgent: any;
@@ -45,6 +45,15 @@ export class BrowserWorker extends BaseWorker {
     this.user_agent_data = null;
     this.name = 'BrowserWorker';
     this.cleaned = false;
+    this.browser = null;
+  }
+
+  public async version(): Promise<any> {
+    let version_info: any = await BaseWorker.prototype.version.call(this);
+    if (this.browser) {
+      version_info.browser_version = await this.browser.version();
+    }
+    return version_info;
   }
 
   public async before_crawl(context: Context | WorkerContext): Promise<any> {
@@ -98,6 +107,7 @@ export class BrowserWorker extends BaseWorker {
       if (this.browser) {
         try {
           await this.browser.close();
+          this.browser = null;
         } catch (err) {
           this.logger.error(`Could not browser.close(): ${err.toString()}`);
         }

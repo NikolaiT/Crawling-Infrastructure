@@ -20,8 +20,8 @@ function deploy_crawl_worker() {
     console.log(systemSync(`npm run build`));
 
     let regions = [
-        //'us-west-1',
-        'us-west-2',
+        // 'us-west-1',
+        // 'us-west-2',
         'us-east-2',
         'us-east-1',
         'eu-central-1',

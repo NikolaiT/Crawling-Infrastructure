@@ -30,6 +30,36 @@ describe('Crawler is online', async () => {
   });
 });
 
+describe('simple version is returned', async () => {
+  it('should return a valid json object with the current packages', async () => {
+    let payload = {
+      version: 'simple',
+    };
+    let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
+    expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
+    expect(response).to.have.property('status', 200);
+    console.log(response.result);
+  });
+});
+
+describe('complex version is returned', async () => {
+  it('should return a valid json object with the current packages', async () => {
+    let payload = {
+      aws_config: aws_config,
+      execution_env: ExecutionEnv.docker,
+      items: ['https://ipinfo.io/json'],
+      function_code: getFunc('browser.js'),
+      local_test: true,
+      version: 'complex',
+    };
+    let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
+    expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
+    expect(response).to.have.property('status', 200);
+    expect(response.result).to.include.keys(['name', 'version', 'description', 'dependencies', 'browser_version', 'platform']);
+    console.log(response.result);
+  });
+});
+
 describe('worker can crawl with browser', async () => {
   it('should return valid html string as result', async () => {
     let payload = {

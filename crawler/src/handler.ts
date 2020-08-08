@@ -10,6 +10,7 @@ import {MetadataHandler} from './metadata';
 import {ProxyHandler} from "./proxy";
 import {WorkerStatus} from './worker';
 import {PageError} from './browser_worker';
+import {VersionInfo} from '@lib/types/common';
 
 export const puppeteer_proxy_error_needles = [
   'net::ERR_PROXY_CONNECTION_FAILED', // treat as proxy connection error
@@ -62,6 +63,15 @@ export class CrawlHandler {
       if (!setup_success) {
         this.logger.error(`Could not setup ${worker.name}. Aborting.`);
         return false;
+      }
+
+      // obtain worker versioning info and quit
+      if (this.config.version === VersionInfo.complex) {
+        let version = await worker.version();
+        this.logger.info(`Worker version: ${version}.`);
+        this.response.result = version;
+        this.response.message = 'complex version info';
+        return true;
       }
 
       await meta.startCrawling();

@@ -41,7 +41,7 @@ functions:
       - src/**
     memorySize: 800
     timeout: 300
-    handler: dist/crawl_worker/src/index.handler
+    handler: dist/crawler/src/index.handler
     description: Cloud HTTP Crawler for AWS.
     events:
       - http:
@@ -52,7 +52,7 @@ functions:
   browser-crawler:
     memorySize: 1600
     timeout: 300
-    handler: dist/crawl_worker/src/index.handler
+    handler: dist/crawler/src/index.handler
     description: Cloud Browser Crawler for AWS.
     events:
       - http:

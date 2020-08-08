@@ -29,6 +29,12 @@ Run integration tests with:
 mocha --timeout 300000 -r ts-node/register test/integration_tests.ts
 ```
 
+Test versions:
+
+```bash
+mocha --timeout 3000000 -r ts-node/register -g 'complex version' test/integration_tests.ts
+```
+
 Run a single integration test with:
 
 ```bash
@@ -43,13 +49,13 @@ Run a specific test suite:
 mocha --timeout 3000000 -r ts-node/register test/detection_tests.ts -g 'fast block'
 ```
 
-or 
+or
 
 ```bash
 mocha --timeout 3000000 -r ts-node/register test/integration_tests.ts -g 'changes fingerprint hash'
 ```
 
-or 
+or
 
 ```bash
 mocha --timeout 3000000 -r ts-node/register test/screen.ts

@@ -12,6 +12,8 @@ import {TerminationNotification} from "./termination";
 import {Context} from "aws-lambda";
 import {ProxyOptions, ProxyChangeReason, allowed_filter_keys} from "@lib/types/proxy";
 import {IAWSConfig} from "@lib/storage/storage";
+import {hostname, platform, totalmem, uptime} from 'os';
+import {system} from '@lib/misc/shell';
 
 export interface IAWSOptions {
   access_key?: string;
@@ -46,6 +48,11 @@ export interface IWorker {
   config: any;
   // the status of the worker
   status: WorkerStatus;
+
+  /**
+   * Obtain versioning information for the worker
+   */
+  version(): Promise<any>;
 
   /**
    * Initializes the worker.
@@ -192,6 +199,27 @@ export class BaseWorker implements IWorker {
     this.restart_worker = false;
     this.name = 'Worker';
     this.proxyChain = require('proxy-chain');
+  }
+
+  public async version(): Promise<any> {
+    let pjson: any = require('../package.json');
+    let version_info: any = {};
+    const interesting_properties: any = ['name', 'version', 'description', 'dependencies'];
+    for (let key of interesting_properties) {
+      if (pjson[key]) {
+        version_info[key] = pjson[key];
+      }
+    }
+
+    version_info.platform = {
+      free: (await system('free -h')).stdout,
+      totalmem: totalmem(),
+      platform: platform(),
+      uptime: uptime(),
+      env: process.env,
+    };
+
+    return version_info;
   }
 
   public async setup(): Promise<any> {

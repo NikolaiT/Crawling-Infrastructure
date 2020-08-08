@@ -27,6 +27,11 @@ export class HttpWorker extends BaseWorker {
     this.name = 'HttpWorker';
   }
 
+  public async version(): Promise<any> {
+    let version_info: any = await BaseWorker.prototype.version.call(this);
+    return version_info;
+  }
+
   public async before_crawl(context: Context | WorkerContext): Promise<any> {
     await super.before_crawl(context);
 

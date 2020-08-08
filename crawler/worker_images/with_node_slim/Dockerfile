@@ -36,7 +36,7 @@ ENV USING_XVFB 1
 # Select Chrome version, must be compatible with Puppeteer version!
 # Find versions at https://www.ubuntuupdates.org/pm/google-chrome-stable
 # or https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
-ENV CHROME_VERSION="81.0.4044.138-1"
+ENV CHROME_VERSION="84.0.4147.105-1"
 
 # Create app directory
 WORKDIR $APP_DIR

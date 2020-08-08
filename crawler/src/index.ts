@@ -10,6 +10,7 @@ import {getIpAddress, MetadataHandler} from './metadata';
 import {ProxyHandler} from './proxy';
 import {Item, QueueItemStatus} from "@lib/types/queue";
 import {BrowserWorkerConfig, CrawlConfig, HttpWorkerConfig} from "./config";
+import {VersionInfo} from '@lib/types/common';
 
 /*
  * A context valid for a VPS machine and worker.
@@ -62,7 +63,20 @@ export class WorkerHandler {
     this.mongodb = new MongoDB(this.config);
   }
 
+  /**
+   * Get the package versions of the most important modules.
+   **/
+  private getVersionInfo() {
+    const pjson = require('../package.json');
+    return pjson;
+  }
+
   public async start() {
+    if (this.config.version === VersionInfo.simple) {
+      this.response.result = this.getVersionInfo();
+      return this.meta.finalize(this.response);
+    }
+
     let is_local_crawl: boolean = Array.isArray(this.config.items) && this.config.items.length > 0;
     this.logger.debug(JSON.stringify(this.config, null, 2));
     this.logger.info(`Starting worker with task_id=${this.config.task_id} and worker_id=${this.config.worker_id}`);
@@ -170,10 +184,17 @@ export class WorkerHandler {
 
     this.logger.debug(JSON.stringify(this.response.result, null, 2));
 
-    if (this.config.result_policy === ResultPolicy.store_in_cloud) {
+    if (this.config.version === VersionInfo.complex) {
+      // only return versioning information, don't change
+      // the result property. Version information is always returned, never
+      // uploaded.
+    } else if (this.config.result_policy === ResultPolicy.store_in_cloud) {
       this.response.result = await this.storeInCloud(this.items);
     } else if (this.config.result_policy === ResultPolicy.return) {
       // return an array of result objects
+      // it's favorable to return an array instead of an object, because
+      // there might me duplicate items, which makes it unfeasible to use
+      // the item name as a object key
       let results: Array<any> = [];
       for (let item of this.items) {
         results.push({

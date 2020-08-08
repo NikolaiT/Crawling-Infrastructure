@@ -2,7 +2,7 @@ import {LogLevel} from "@lib/misc/logger";
 import {ProxyOptions} from "@lib/types/proxy";
 import {IAWSConfig} from "@lib/storage/storage";
 import {downloadMaybeGzipped} from "@lib/misc/http";
-import {ResultPolicy, ExecutionEnv, StoragePolicy} from '@lib/types/common';
+import {ResultPolicy, ExecutionEnv, StoragePolicy, VersionInfo} from '@lib/types/common';
 
 export interface ICookie {
   name: string;
@@ -33,6 +33,8 @@ export const supported_screen_sizes = [{width: 1920, height: 1080}, {width: 1366
   {width: 1536, height: 864}, {width: 1600, height: 900}, {width: 1280, height: 800}, {width: 1280, height: 720}, {width: 1280, height: 1024}, {width: 1024, height: 768}, {width: 1680, height: 1050}, {width: 2560, height: 1440}, {width: 1920, height: 1200}, {width: 1360, height: 768}, {width: 1600, height: 1024}, {width: 1400, height: 1050}, {width: 1280, height: 1024}, {width: 1440, height: 900}, {width: 1400, height: 900}, {width: 1280, height: 960}];
 
 export interface HttpWorkerConfig {
+  // returns versioning information and quits the process.
+  version: VersionInfo;
   // when the items are passed directly to the worker, there is no
   // need to obtain the items from the remote master
   // no need to update items, worker_meta
