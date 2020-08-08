@@ -11,6 +11,7 @@ import {ProxyHandler} from './proxy';
 import {Item, QueueItemStatus} from "@lib/types/queue";
 import {BrowserWorkerConfig, CrawlConfig, HttpWorkerConfig} from "./config";
 import {VersionInfo} from '@lib/types/common';
+import {getVersionInfo} from '@lib/misc/helpers';
 
 /*
  * A context valid for a VPS machine and worker.
@@ -63,17 +64,9 @@ export class WorkerHandler {
     this.mongodb = new MongoDB(this.config);
   }
 
-  /**
-   * Get the package versions of the most important modules.
-   **/
-  private getVersionInfo() {
-    const pjson = require('../package.json');
-    return pjson;
-  }
-
   public async start() {
     if (this.config.version === VersionInfo.simple) {
-      this.response.result = this.getVersionInfo();
+      this.response.result = getVersionInfo(require('../package.json'));
       return this.meta.finalize(this.response);
     }
 

@@ -4,7 +4,7 @@ import {ExecutionEnv} from '@lib/types/common';
 import {S3Controller} from "@lib/storage/storage";
 import {Logger, getLogger} from '@lib/misc/logger';
 import {gaussian} from '@lib/misc/stats';
-import {randomElement, sleep} from '@lib/misc/helpers';
+import {randomElement, sleep, getVersionInfo} from '@lib/misc/helpers';
 import {EnqueueHandler} from "./enqueue";
 import {ProxyHandler} from "./proxy";
 import {IProxyFilter, ProxyStatus} from "@lib/types/proxy";
@@ -12,7 +12,7 @@ import {TerminationNotification} from "./termination";
 import {Context} from "aws-lambda";
 import {ProxyOptions, ProxyChangeReason, allowed_filter_keys} from "@lib/types/proxy";
 import {IAWSConfig} from "@lib/storage/storage";
-import {hostname, platform, totalmem, uptime} from 'os';
+import * as os from 'os';
 import {system} from '@lib/misc/shell';
 
 export interface IAWSOptions {
@@ -202,23 +202,7 @@ export class BaseWorker implements IWorker {
   }
 
   public async version(): Promise<any> {
-    let pjson: any = require('../package.json');
-    let version_info: any = {};
-    const interesting_properties: any = ['name', 'version', 'description', 'dependencies'];
-    for (let key of interesting_properties) {
-      if (pjson[key]) {
-        version_info[key] = pjson[key];
-      }
-    }
-
-    version_info.platform = {
-      free: (await system('free -h')).stdout,
-      totalmem: totalmem(),
-      platform: platform(),
-      uptime: uptime(),
-      env: process.env,
-    };
-
+    let version_info: any = getVersionInfo(require('../package.json'));
     return version_info;
   }
 

@@ -53,7 +53,7 @@ export async function endpoint(body: any, endpoint: string, method='POST', api_u
   } catch (error) {
     // dont print whole Got stack
     console.error(`Got request to ${full_url} failed with Error: ${error.message}`);
-    console.error(error.message);
+    console.error(error);
   }
 }
 
@@ -127,11 +127,12 @@ export async function beforeTest(num_tasks: number = 0, env: Array<string> = [])
     let response  = await system(cmd);
     console.log(`Image id: ${await getImageId()}`);
     // starting the server in the background takes a few seconds,
-    await sleep(3500);
+    await sleep(4500);
     console.log(`Crawler should be online on http://localhost:4444/`);
   }
 
   if (num_tasks > 0) {
+    console.log('creating tasks...');
     await createTasks(num_tasks);
     console.log(tasks);
   }

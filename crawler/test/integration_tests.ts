@@ -38,7 +38,7 @@ describe('simple version is returned', async () => {
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
     expect(response).to.have.property('status', 200);
-    console.log(response.result);
+    expect(response.result).to.include.keys(['name', 'version', 'description', 'dependencies', 'platform']);
   });
 });
 
@@ -53,10 +53,11 @@ describe('complex version is returned', async () => {
       version: 'complex',
     };
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
+    console.log(response);
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
     expect(response).to.have.property('status', 200);
     expect(response.result).to.include.keys(['name', 'version', 'description', 'dependencies', 'browser_version', 'platform']);
-    console.log(response.result);
+    expect(response.result.platform).to.include.keys(['type', 'release', 'platform', 'totalmem', 'freemem', 'uptime']);
   });
 });
 
@@ -368,7 +369,7 @@ describe('partly-invalid-config', async () => {
 
     expect(response.metadata).to.include.keys(metadata_keys);
     expect(response.message).to.include('Unable to connect to mongodb.');
-    expect(response.status).to.equal(200);
+    expect(response.status).to.equal(400);
   });
 });
 
@@ -430,7 +431,6 @@ describe('sleeping randomly delays execution as expected', async () => {
   });
 });
 
-
 describe('defect worker will save debug info when config is set', async () => {
   it('stores appropriate debug information', async () => {
     let payload = {
@@ -445,11 +445,12 @@ describe('defect worker will save debug info when config is set', async () => {
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
     expect(response).to.have.property('status', 200);
+    //console.log(response.result);
 
     let i = 0;
     for (let res of response.result) {
       expect(res.result.screen_b64).to.have.length.above(5000);
-      expect(res.result.document).to.have.length.above(5000);
+      expect(res.result.document).to.have.length.above(5);
       fs.writeFileSync(`test/screens/fail${i++}.png`, Buffer.from(res.result.screen_b64, 'base64'));
     }
 
