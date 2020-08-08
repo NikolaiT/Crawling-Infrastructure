@@ -47,7 +47,7 @@
     "module-alias": "^2.2.2",
     "mongoose": "^5.8.7",
     "proxy-chain": "^0.4.5",
-    "puppeteer-core": "^3.3.0",
+    "puppeteer-core": "^5.2.1",
     "puppeteer-extra": "^3.1.13",
     "puppeteer-extra-plugin-recaptcha": "^3.1.14",
     "puppeteer-extra-plugin-stealth": "^2.4.14",
