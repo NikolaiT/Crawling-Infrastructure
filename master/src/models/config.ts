@@ -27,9 +27,10 @@ const default_config: Config = {
   priority_policy: "absolute",
   random_region: true,
   worker_loglevel: LogLevel.info,
-  scheduler_loglevel: LogLevel.info,
+  scheduler_loglevel: LogLevel.verbose,
   num_machines_browser: 2,
-  num_machines_http: 1,
+  num_machines_http: 0,
+  keep_machines_online: false,
   cluster_size: ClusterSize.large,
   retry_failed_items: 3,
   max_crawling_time_lambda: 240,
@@ -114,8 +115,8 @@ const default_config: Config = {
   },
   elastic_ips: [
     {
-      eid: 'eipalloc-0cb69a846538eb5b6',
-      ip: '52.204.14.197',
+      eid: 'eipalloc-067508519a23b982c',
+      ip: '54.193.203.229',
       used: false,
     },
   ],
@@ -205,6 +206,10 @@ const ConfigSchema = new mongoose.Schema({
   },
   num_machines_http: {
     type: Number,
+  },
+  keep_machines_online: {
+    type: Boolean,
+    default: false,
   },
   cluster_size: {
     type: ClusterSize,

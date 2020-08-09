@@ -5,23 +5,27 @@ import {CrawlStatus, TaskHandler, WorkerType} from "../models/crawltask.model";
 import {checkItems, profileAllowed, loadFunctionCode, configureCrawlProfile, assignRegions} from "./lib";
 import {Config} from "../../scheduler/config";
 import {ConfigHandler} from "../models/config";
+import {WorkerAllocator, ClusterSize} from '../../scheduler/swarm_worker_allocator';
 const got = require('got');
 
 export class ApiService {
   private config: Config | null;
   private task_handler: TaskHandler;
+  private worker_allocator: WorkerAllocator;
   logger: Logger;
 
   constructor() {
     this.config = null;
     this.logger = getLogger(null, 'api_service');
     this.task_handler = new TaskHandler();
+    this.worker_allocator = null;
   }
 
   public async setup() {
     try {
       let config_handler = new ConfigHandler();
       this.config = await config_handler.getConfig();
+      this.worker_allocator = new WorkerAllocator(this.config, false);
     } catch(err) {
       this.logger.error(`Cannot get config: ${err}`);
     }
@@ -134,8 +138,28 @@ export class ApiService {
     return crawl_task;
   }
 
+  public async allocate_machines(req: Request, res: Response): Promise<any> {
+    let worker_type: WorkerType = req.body.worker_type || WorkerType.browser;
+    let num_machines: number = req.body.num_machines || 1;
+    let cluster_size: ClusterSize = req.body.cluster_size || ClusterSize.large;
+    // check if there are machines already allocated, if not
+    // allocated as much machiens as the param says we should
+    await this.worker_allocator.setupWorkerAllocator();
+    this.logger.info(`Allocating: worker_type=${worker_type}, num_machines=${num_machines}, cluster_size=${cluster_size}`);
+    await this.worker_allocator.allocate(
+      worker_type,
+      num_machines,
+      cluster_size
+    );
+    let endpoints = await this.worker_allocator.getApiEndpoints(worker_type);
+    this.logger.info(`Endpoints: ${endpoints}`);
+    return res.status(200).send(endpoints);
+  }
+
   public async crawl(req: Request, res: Response): Promise<any> {
     let api_key: string = res.locals.api_key;
+
+    this.logger.info(`Payload: ${JSON.stringify(req.body)}`);
 
     let maybe_task: any = await this.check_api_call(req.body);
     if (maybe_task && maybe_task.error && typeof maybe_task.error === 'string') {
@@ -146,9 +170,16 @@ export class ApiService {
       let issuer = req.body.email || 'unknown';
       this.logger.info(`[${issuer}] Received crawl task over ${req.body.items.length} items.`);
       // we created a valid crawl task, lets start working on them with our backends.
-      let crawl_runner = new CrawlRunner(this.config);
+      let crawl_runner = new CrawlRunner(this.config, maybe_task);
 
       maybe_task.id = 'phoenix';
+
+      if (req.body.crawl_backend === 'ec2') {
+        this.logger.info(`Launching in runDockerConcurrently: ${JSON.stringify(maybe_task)}`);
+        let results = await crawl_runner.runDockerConcurrently(res, maybe_task, req.body);
+        return res.send(results);
+      }
+
       if (req.body.streaming) {
         issuer = 'streaming-client';
         let authenticated = await this.api_call(process.env.EXTERNAL_AUTH_URL, req.body);
@@ -179,5 +210,4 @@ export class ApiService {
       return res.status(400).send(maybe_task);
     }
   }
-
 }

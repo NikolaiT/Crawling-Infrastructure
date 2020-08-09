@@ -108,6 +108,18 @@ function systemSync(cmd) {
     case 'system':
       console.dir(await call({}, 'system', 'GET'), {depth: null, colors: true});
       break;
+    case 'allocate':
+      console.dir(await call({}, 'allocateMachines', 'POST'), {worker_type: 'browser', num_machines: 1});
+      break;
+    case 'test_proxy':
+      let test_proxy_task = {
+       crawl_backend: 'ec2',
+       items: ['https://ipinfo.io/'],
+       function: "https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/browser.js",
+       proxies: ["http://51.15.13.161:3201", "http://51.15.13.161:3224"],
+      };
+      console.dir(await call(test_proxy_task, 'crawl', 'POST'));
+      break;
     case 'stat':
       console.dir(await call({}, `stats/${getTaskIdOrAbort()}`, 'GET'), {depth: null, colors: true});
       break;
@@ -239,7 +251,7 @@ function systemSync(cmd) {
       console.log(await call(test_task, 'task'));
       break;
       case 'create_10k_task':
-        let test_task = {
+        let test_task_second = {
          "items": "https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/items/top10k.txt",
          "function": "https://github.com/NikolaiT/scrapeulous/blob/master/http_clean.js",
          "storage_policy": "itemwise",
@@ -249,7 +261,7 @@ function systemSync(cmd) {
          },
          "max_items_per_second": 1.0
         };
-        console.log(await call(test_task, 'task'));
+        console.log(await call(test_task_second, 'task'));
         break;
     case 'items':
       let res = await call({id: getTaskIdOrAbort(), filter: { status: 3 }, select: '', limit: 10}, 'items', 'POST');

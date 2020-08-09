@@ -9,9 +9,10 @@ import {IWorkerMetaHandler, WorkerMetaHandler} from "../src/models/workermeta.mo
 import {HTTPError, RequestError} from 'got';
 import {average} from "@lib/misc/stats";
 import {IQueueStats} from "@lib/types/queue";
-import {ExecutionEnv, ResultPolicy} from '@lib/types/common';
+import {ExecutionEnv, ResultPolicy, CrawlBackend} from '@lib/types/common';
 import {LogLevel} from '@lib/misc/logger';
 import {Response} from "express";
+import {MachineHandler, MachineStatus, MachineType} from '../src/models/machine.model';
 const got = require('got');
 
 export class CrawlRunner {
@@ -565,6 +566,95 @@ export class CrawlRunner {
     await this.removeWorkerMeta(worker_meta_ids_to_remove);
 
     return num_workers_started;
+  }
+
+  /**
+   * Run crawl payload on docker cluster and return results immediatley after crawling finished.
+   *
+   * Invocation method: invokeRequestResponse
+   *
+   * @param num_workers_to_launch
+   * @param endpoints
+   * @return the number of workers started
+   */
+  public async runDockerConcurrently(res: Response, task: any, body: any): Promise<any> {
+    let handler = new MachineHandler();
+    let endpoints = await handler.getApiEndpoints(task.worker_type);
+
+    let items: Array<string> = body.items;
+    let concurrency: number = body.concurrency || 0;
+    let streaming: boolean = body.streaming || false;
+
+    // switch region for every new aws lambda instance
+    let worker_payload: any = this.getPayload(ExecutionEnv.docker);
+    worker_payload.compress = false;
+    worker_payload.result_policy = ResultPolicy.return;
+    worker_payload.execution_env = ExecutionEnv.docker;
+
+    let items_per_worker: number = this.getItemsPerWorker(items.length, concurrency);
+    let invocations: Array<any> = [];
+    let region_calls: any = {};
+    let num_workers_started = 0;
+
+    if (endpoints.length <= 0) {
+      return num_workers_started;
+    }
+
+    let cnt: number = 0;
+    while (items.length > 0) {
+      let items_for_worker: Array<string> = items.splice(0, items_per_worker);
+      if (items_for_worker.length <= 0) {
+        break;
+      }
+      task.worker_id++;
+      worker_payload.worker_id = task.worker_id;
+      worker_payload.items = items_for_worker;
+
+      let options = {
+        timeout: 300000,
+        method: 'POST',
+        body: worker_payload,
+        retry: 0,
+        json: true
+      };
+
+      this.logger.debug(JSON.stringify(worker_payload, null, 1));
+      let logger = this.logger;
+
+      options.body.worker_id = this.task.worker_id;
+      // use each endpoint equally
+      let endpoint_index = (cnt++) % endpoints.length;
+      let endpoint = endpoints[endpoint_index];
+      let url = endpoint + '/invokeRequestResponse';
+      invocations.push(got(url, options));
+    }
+
+    let responses: Array<any> = [];
+    let results: Array<any> = [];
+
+    try {
+      responses = await Promise.all(invocations);
+      this.logger.info(`[${task.id}] Received ${responses.length} responses with ${items_per_worker} items per worker`);
+    } catch (err) {
+      this.logger.error(`[${task.id}] Error: ${err.toString()}`);
+      return {error: err.toString()};
+    }
+
+    let elapsed_times = [];
+    for (let response of responses) {
+      try {
+        if (response.body && response.body.status === 200) {
+          let result = JSON.parse(response.body.result);
+          results.push(result);
+        } else {
+          this.logger.error(`[${task.id}] Docker invocation error: ${response}`);
+        }
+      } catch (err) {
+        this.logger.error(err.toString());
+      }
+    }
+
+    return results;
   }
 
   private async removeWorkerMeta(worker_meta_to_remove: Array<any>, by_object: boolean = false) {

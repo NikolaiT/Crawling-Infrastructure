@@ -29,6 +29,7 @@ export class WorkerAllocator {
   handler: any;
   config: any;
   logger?: Logger;
+  setup: boolean;
 
   /**
    * @param config
@@ -40,24 +41,38 @@ export class WorkerAllocator {
     this.handler = new MachineHandler();
     this.machines = [];
     this.dry_run = dry_run;
-    this.region = 'us-east-1';
+    let region_config: any = {
+      'us-east-1': {
+        ami: 'ami-00a208c7cdba991ea',
+        security_group_name: 'docker-machine',
+      },
+      'us-west-1': {
+        ami: 'ami-05f856ae6fd8bc118',
+        security_group_name: 'docker-machine',
+      },
+    };
+    this.setup = false;
+    this.region = 'us-west-1';
     // https://cloud-images.ubuntu.com/locator/ec2/
     // ubuntu 18.04, hvm:ebs-ssd, us-east-1
-    this.ami = 'ami-00a208c7cdba991ea';
+    this.ami = region_config[this.region].ami;
     // security group should allow access to app specific port
-    this.security_group_name = 'docker-machine';
+    this.security_group_name = region_config[this.region].security_group_name;
     this.logger = getLogger(config.logging_root, 'worker_allocator');
   }
 
   public async setupWorkerAllocator() {
-    if (!await this.checkSoftwareInstalled()) {
-      this.logger.error(`Aborting due to missing software...`);
-      process.exit(1);
+    if (!this.setup) {
+      if (!await this.checkSoftwareInstalled()) {
+        this.logger.error(`Aborting due to missing software...`);
+        process.exit(1);
+      }
+      this.checkEnv();
+      await this.setupAwsProfile();
+      this.machines = await this.handler.getMachines();
+      this.logger.info(`WorkerAllocator setup in region ${this.region} and ami ${this.ami} with ${this.machines.length} machines`);
+      this.setup = true;
     }
-    this.checkEnv();
-    await this.setupAwsProfile();
-    this.machines = await this.handler.getMachines();
-    this.logger.info(`WorkerAllocator setup in region ${this.region} and ami ${this.ami} with ${this.machines.length} machines`);
   }
 
   /**
@@ -100,7 +115,7 @@ export class WorkerAllocator {
 
       try {
         machine_name = `CrawlWorker${Date.now()}`;
-        machine = await this.allocateMachine(machine_name, size, eip, true, label);
+        machine = await this.allocateMachine(machine_name, size, eip, false, label);
         this.logger.info(`Allocated machine ${machine.name} with size ${machine.size} in region ${machine.region}`);
 
         if (!await this.associateElasticIp(machine)) {
@@ -209,9 +224,9 @@ export class WorkerAllocator {
    * Tasks that need a browser will be assigned to crawler machines
    * with support for browser. Http tasks will be assigned to http machines.
    */
-  public async getApiEndpoints(task: ICrawlTask): Promise<Array<string>> {
+  public async getApiEndpoints(worker_type: WorkerType): Promise<Array<string>> {
     let machines = await this.handler.getMachines({
-      type: this.worker2MachineType(task.worker_type),
+      type: this.worker2MachineType(worker_type),
     });
 
     let endpoints = [];
@@ -233,6 +248,8 @@ export class WorkerAllocator {
 
   /**
    * Check that the following software is installed on the host:
+   *
+   * Install docker machine: https://github.com/docker/machine/releases
    *
    * 1. docker
    * 2. docker-compose
@@ -316,7 +333,7 @@ aws_secret_access_key = ${process.env.AWS_SECRET_KEY}
     let config_file = path.join(aws_profile_dir, 'config');
     let config_contents = `
 [default]
-region = ${process.env.AWS_REGION}
+region = ${this.region}
 output = json
     `;
     fs.writeFileSync(config_file, config_contents);
@@ -382,7 +399,7 @@ output = json
 --swarm \
 --swarm-discovery token://${this.swarm_join_token} \
 --swarm-addr ${process.env.MASTER_IP}`;
-    
+
     if (use_spot_instance) {
       command += ` --amazonec2-request-spot-instance `;
       // use a price as threshold with `--amazonec2-spot-price`

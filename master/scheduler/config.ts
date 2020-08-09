@@ -59,6 +59,12 @@ export interface Config {
   num_machines_browser: number;
   // num machines to allocate that support exclusively http requests
   num_machines_http: number;
+  // don't dealloate machines when all tasks are completed
+  // allocate machines regardless of an existing task that needs machine
+  // the purpose of this flag is to allow the admin to keep crawling machines
+  // online regardless of an visible demand. Reason: Demand cannot be anticipated
+  // because requests are made instantianous
+  keep_machines_online: boolean;
   // the size of the cluster
   cluster_size: ClusterSize;
   // how many times to retry failed items

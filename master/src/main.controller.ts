@@ -112,6 +112,10 @@ export class Controller {
     // get items mapping
     this.app.route('/mapping/:id').get(auth, this.task_service.getMapping.bind(this.task_service));
 
+    // @TODO: probably remove this function allocate_machines
+    // invoke backend directly without queue and scheduler interference
+    // this.app.route('/allocateMachines').post(api_key_given, this.api_service.allocate_machines.bind(this.api_service));
+
     // invoke backend directly without queue and scheduler interference
     this.app.route('/crawl').post(api_key_given, this.api_service.crawl.bind(this.api_service));
 

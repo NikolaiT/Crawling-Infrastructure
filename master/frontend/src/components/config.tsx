@@ -163,6 +163,17 @@ export class Config extends React.Component<{form: any}, {config: any}> {
 
           <Form.Item label={
             <span>
+              Keep crawling machines online regardless of conrete demand from crawl tasks&nbsp;
+              <Tooltip title="If this is set to true, docker machines will be constantly allocated unless you set 'Forcefully remove all machines' to true.">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+          }>
+            {getFieldDecorator('keep_machines_online', { initialValue: this.state.config.keep_machines_online, valuePropName: 'checked' })(<Switch />)}
+          </Form.Item>
+
+          <Form.Item label={
+            <span>
               Worker Loglevel&nbsp;
               <Tooltip title="The log level of crawlers. Debug logs the most, error logs the least.">
               <Icon type="question-circle-o" />

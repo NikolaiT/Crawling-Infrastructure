@@ -12,7 +12,7 @@ import {ILoggingHandler, LoggingHandler} from "@lib/misc/logger";
 import {ConfigHandler} from '../src/models/config';
 import {CrawlRunner} from './runner';
 
-export const __VERSION__: string = 'v1.3';
+export const __VERSION__: string = 'v1.4';
 
 export class Scheduler {
   log_handler: ILoggingHandler;
@@ -249,39 +249,41 @@ export class Scheduler {
    * Why do we need to terminate them? => They cost us money.
    *
    * 1. We terminate machines if there are 0 tasks running that need
-   * docker crawlers.
+   * docker crawlers. Exception: keep_machines_online is set to true.
    *
    * 2. Additionally, we terminate machines if all tasks that can use
    * docker crawlers have num_workers_running set to 0.
    */
   private async shouldWeKillMachines(): Promise<void> {
-    for (let worker_type of [WorkerType.http, WorkerType.browser]) {
-      // are there any pending tasks of this type?
-      let pending_tasks = await this.task_handler.task_model.find({
-        worker_type: worker_type,
-        status: {$in: [CrawlStatus.completed, CrawlStatus.paused]},
-        whitelisted_proxies: true,
-      }).lean();
+    if (this.config.keep_machines_online === false) {
+      for (let worker_type of [WorkerType.http, WorkerType.browser]) {
+        // are there any pending tasks of this type?
+        let pending_tasks = await this.task_handler.task_model.find({
+          worker_type: worker_type,
+          status: {$in: [CrawlStatus.completed, CrawlStatus.paused]},
+          whitelisted_proxies: true,
+        }).lean();
 
-      let all_pending_tasks_finished: boolean = true;
+        let all_pending_tasks_finished: boolean = true;
 
-      // check if no worker is running for this task type
-      for (let task of pending_tasks) {
-        if (task.num_workers_running > 0) {
-          all_pending_tasks_finished = false;
-          break;
+        // check if no worker is running for this task type
+        for (let task of pending_tasks) {
+          if (task.num_workers_running > 0) {
+            all_pending_tasks_finished = false;
+            break;
+          }
         }
-      }
 
-      let running_tasks = await this.task_handler.task_model.countDocuments({
-        worker_type: worker_type,
-        status: CrawlStatus.started,
-        whitelisted_proxies: true,
-      });
+        let running_tasks = await this.task_handler.task_model.countDocuments({
+          worker_type: worker_type,
+          status: CrawlStatus.started,
+          whitelisted_proxies: true,
+        });
 
-      if (all_pending_tasks_finished && running_tasks <= 0) {
-        this.log_handler.logger.verbose(`Attempting to destroy machines for worker type ${worker_type}.`);
-        await this.worker_allocator.cleanupAll(worker_type);
+        if (all_pending_tasks_finished && running_tasks <= 0) {
+          this.log_handler.logger.verbose(`Attempting to destroy machines for worker type ${worker_type}.`);
+          await this.worker_allocator.cleanupAll(worker_type);
+        }
       }
     }
 
@@ -304,6 +306,24 @@ export class Scheduler {
   }
 
   private async run() {
+    // keep machines online if the flag `keep_machines_online` is set
+    if (this.config.keep_machines_online === true) {
+      if (this.config.force_remove_machines) {
+        this.log_handler.logger.warn(`Will not allocate machines, force_remove_machines set to "${this.config.force_remove_machines}"`);
+      } else {
+        await this.worker_allocator.allocate(
+          WorkerType.browser,
+          this.config.num_machines_browser,
+          this.config.cluster_size || ClusterSize.large
+        );
+        await this.worker_allocator.allocate(
+          WorkerType.http,
+          this.config.num_machines_http,
+          this.config.cluster_size || ClusterSize.large
+        );
+      }
+    }
+
     await this.shouldWeKillMachines();
 
     let tasks = await this.getTasks();
@@ -391,7 +411,7 @@ export class Scheduler {
 
     if (task.whitelisted_proxies) {
       if (this.config.force_remove_machines) {
-        this.log_handler.logger.warn(`Cannot allocate machines, force_remove_machines=${this.config.force_remove_machines}`);
+        this.log_handler.logger.warn(`Will not allocate machines, force_remove_machines set to "${this.config.force_remove_machines}"`);
         return 0;
       } else {
         await this.worker_allocator.allocate(
@@ -399,7 +419,7 @@ export class Scheduler {
           num_machines,
           this.config.cluster_size || ClusterSize.large
         );
-        let endpoints = await this.worker_allocator.getApiEndpoints(task);
+        let endpoints = await this.worker_allocator.getApiEndpoints(task.worker_type);
         return await this.crawl_runner.runDocker(num_workers_to_launch, endpoints);
       }
     } else {

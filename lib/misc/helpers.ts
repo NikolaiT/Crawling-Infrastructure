@@ -1,8 +1,30 @@
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
+import * as os from 'os';
 import glob from 'glob';
 import detectNewline from 'detect-newline';
+
+export function getVersionInfo(pjson: any): any {
+  let version_info: any = {};
+  const interesting_properties: any = ['name', 'version', 'description', 'dependencies'];
+  for (let key of interesting_properties) {
+    if (pjson[key]) {
+      version_info[key] = pjson[key];
+    }
+  }
+
+  version_info.platform = {
+    type: os.type(),
+    release: os.release(),
+    platform: os.platform(),
+    totalmem: os.totalmem(),
+    freemem: os.freemem(),
+    uptime: os.uptime(),
+    env: process.env,
+  };
+
+  return version_info;
+}
 
 export function randomElement(array: Array<any>): any {
   return array[Math.floor(Math.random() * array.length)];
@@ -27,7 +49,7 @@ export async function chunkRead(path: string, callback: any, chunk_size=5242880)
   let fp = fs.openSync(path, 'r');
   let bytes_read = 0;
   let num_processed = 0;
-  
+
   while (true) {
     bytes_read = fs.readSync(fp, chunk_buffer, 0, chunk_size, offset);
     if (bytes_read <= 0) {
