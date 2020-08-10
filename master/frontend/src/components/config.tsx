@@ -103,7 +103,7 @@ export class Config extends React.Component<{form: any}, {config: any}> {
               </Tooltip>
             </span>
           }>
-            {getFieldDecorator('browser_lambda_arn', { initialValue: "arn:aws:lambda:{region}:{{YOUR AWS ACCOUNT ID}}:function:crawler-dev-browser-crawler" })(<Input />)}
+            {getFieldDecorator('browser_lambda_arn', { initialValue: "arn:aws:lambda:{region}:672736483160:function:crawler-dev-browser-crawler" })(<Input />)}
           </Form.Item>
 
           <Form.Item label={
@@ -114,7 +114,7 @@ export class Config extends React.Component<{form: any}, {config: any}> {
               </Tooltip>
             </span>
           }>
-            {getFieldDecorator('http_lambda_arn', { initialValue: "arn:aws:lambda:{region}:{{YOUR AWS ACCOUNT ID}}:function:crawler-dev-http-crawler" })(<Input />)}
+            {getFieldDecorator('http_lambda_arn', { initialValue: "arn:aws:lambda:{region}:672736483160:function:crawler-dev-http-crawler" })(<Input />)}
           </Form.Item>
 
           <Form.Item label={

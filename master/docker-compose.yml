@@ -85,7 +85,7 @@ services:
       - HOST=0.0.0.0
       - USING_XVFB=1
     deploy:
-      replicas: 10
+      replicas: 5
       placement:
         # allow crawler to run on all nodes
         # except the manager node
@@ -116,7 +116,7 @@ services:
       - PORT=4444
       - USING_XVFB=0
     deploy:
-      replicas: 10
+      replicas: 5
       placement:
         constraints:
           - node.role != manager

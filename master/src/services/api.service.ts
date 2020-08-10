@@ -99,6 +99,12 @@ export class ApiService {
       regions: [],
     };
 
+    if (obj.crawl_options && obj.crawl_options.proxies) {
+      if (!Array.isArray(obj.crawl_options.proxies)) {
+        return { error: 'crawl_options.proxies must be an array' };
+      }
+    }
+
     if (Array.isArray(obj.items)) {
       crawl_task.num_items = obj.items.length;
     }
@@ -159,7 +165,7 @@ export class ApiService {
   public async crawl(req: Request, res: Response): Promise<any> {
     let api_key: string = res.locals.api_key;
 
-    this.logger.info(`Payload: ${JSON.stringify(req.body)}`);
+    this.logger.debug(`Payload: ${JSON.stringify(req.body)}`);
 
     let maybe_task: any = await this.check_api_call(req.body);
     if (maybe_task && maybe_task.error && typeof maybe_task.error === 'string') {
@@ -170,7 +176,7 @@ export class ApiService {
       let issuer = req.body.email || 'unknown';
       this.logger.info(`[${issuer}] Received crawl task over ${req.body.items.length} items.`);
       // we created a valid crawl task, lets start working on them with our backends.
-      let crawl_runner = new CrawlRunner(this.config, maybe_task);
+      let crawl_runner = new CrawlRunner(this.config);
 
       maybe_task.id = 'phoenix';
 

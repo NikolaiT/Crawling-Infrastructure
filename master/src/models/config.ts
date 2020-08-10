@@ -28,7 +28,7 @@ const default_config: Config = {
   random_region: true,
   worker_loglevel: LogLevel.info,
   scheduler_loglevel: LogLevel.verbose,
-  num_machines_browser: 2,
+  num_machines_browser: 1,
   num_machines_http: 0,
   keep_machines_online: false,
   cluster_size: ClusterSize.large,

@@ -581,20 +581,29 @@ export class CrawlRunner {
     let handler = new MachineHandler();
     let endpoints = await handler.getApiEndpoints(task.worker_type);
 
+    this.logger.info(`runDockerConcurrently() using endpoints: ${endpoints}`);
+
     let items: Array<string> = body.items;
-    let concurrency: number = body.concurrency || 0;
+    let concurrency: number = body.concurrency || 1;
     let streaming: boolean = body.streaming || false;
 
-    // switch region for every new aws lambda instance
-    let worker_payload: any = this.getPayload(ExecutionEnv.docker);
+    let worker_payload: any = this.taskToWorkerPayload(task);
     worker_payload.compress = false;
     worker_payload.result_policy = ResultPolicy.return;
     worker_payload.execution_env = ExecutionEnv.docker;
+    worker_payload.API_KEY = process.env.API_KEY;
+    if (task.worker_type === WorkerType.browser) {
+      worker_payload.worker_type = 'browser';
+    } else {
+      worker_payload.worker_type = 'http';
+    }
 
     let items_per_worker: number = this.getItemsPerWorker(items.length, concurrency);
     let invocations: Array<any> = [];
     let region_calls: any = {};
     let num_workers_started = 0;
+
+    this.logger.info(`runDockerConcurrently() worker_payload: ${JSON.stringify(worker_payload)}`);
 
     if (endpoints.length <= 0) {
       return num_workers_started;
@@ -606,8 +615,7 @@ export class CrawlRunner {
       if (items_for_worker.length <= 0) {
         break;
       }
-      task.worker_id++;
-      worker_payload.worker_id = task.worker_id;
+      worker_payload.worker_id++;
       worker_payload.items = items_for_worker;
 
       let options = {
@@ -619,9 +627,6 @@ export class CrawlRunner {
       };
 
       this.logger.debug(JSON.stringify(worker_payload, null, 1));
-      let logger = this.logger;
-
-      options.body.worker_id = this.task.worker_id;
       // use each endpoint equally
       let endpoint_index = (cnt++) % endpoints.length;
       let endpoint = endpoints[endpoint_index];
@@ -644,8 +649,7 @@ export class CrawlRunner {
     for (let response of responses) {
       try {
         if (response.body && response.body.status === 200) {
-          let result = JSON.parse(response.body.result);
-          results.push(result);
+          results.push(response.body);
         } else {
           this.logger.error(`[${task.id}] Docker invocation error: ${response}`);
         }

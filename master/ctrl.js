@@ -114,11 +114,28 @@ function systemSync(cmd) {
     case 'test_proxy':
       let test_proxy_task = {
        crawl_backend: 'ec2',
-       items: ['https://ipinfo.io/'],
+       items: ['https://ipinfo.io/json'],
        function: "https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/browser.js",
-       proxies: ["http://51.15.13.161:3201", "http://51.15.13.161:3224"],
+       crawl_options: {
+         proxies: [],
+       },
+       API_KEY: API_KEY
       };
-      console.dir(await call(test_proxy_task, 'crawl', 'POST'));
+      console.dir(await call(test_proxy_task, 'crawl', 'POST'), {depth: null, colors: true});
+      break;
+    case 'test_proxy_google':
+      let test_proxy_task_google = {
+       crawl_backend: 'ec2',
+       items: ['current weather'],
+       function: "https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/google_scraper.js",
+       crawl_options: {
+         random_user_agent: false,
+         default_navigation_timeout: 15000,
+         proxies: [],
+       },
+       API_KEY: API_KEY
+      };
+      console.dir(await call(test_proxy_task_google, 'crawl', 'POST'), {depth: null, colors: true});
       break;
     case 'stat':
       console.dir(await call({}, `stats/${getTaskIdOrAbort()}`, 'GET'), {depth: null, colors: true});
