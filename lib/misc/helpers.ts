@@ -5,15 +5,19 @@ import glob from 'glob';
 import detectNewline from 'detect-newline';
 
 export function getVersionInfo(pjson: any): any {
-  let version_info: any = {};
+  let version_info: any = {
+    package_info: {}
+  };
+
   const interesting_properties: any = ['name', 'version', 'description', 'dependencies'];
   for (let key of interesting_properties) {
     if (pjson[key]) {
-      version_info[key] = pjson[key];
+      version_info.package_info[key] = pjson[key];
     }
   }
 
   version_info.platform = {
+    hostname: os.hostname(),
     type: os.type(),
     release: os.release(),
     platform: os.platform(),

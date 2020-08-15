@@ -187,6 +187,9 @@ export class CrawlHandler {
       meta.computeAverageItemsPerSecond();
       meta.num_proxies_obtained = worker.num_proxies_obtained;
       this.response.result = result;
+      if (this.config.worker_metadata) {
+        this.response.worker_metadata = await worker.getStatus();
+      }
     } catch (error) {
       this.logger.error(error.stack);
       this.response.status = 500;

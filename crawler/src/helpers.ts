@@ -71,7 +71,7 @@ export function shuffle(a: Array<any>) {
 }
 
 export function getRandomIPApi() {
-  const api_urls = [/*'http://lumtest.com/myip.json',*/ 'https://ipinfo.io/json', 'https://ipapi.co/json'];
+  const api_urls = ['https://ipinfo.io/json', 'https://ipapi.co/json'];
   shuffle(api_urls);
   return api_urls[0];
 }

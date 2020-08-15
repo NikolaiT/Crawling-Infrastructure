@@ -114,6 +114,8 @@ export interface HttpWorkerConfig {
   user_agent_options: any;
   // when set to true, invoke setup() in after any crawl() method
   restart_before_crawl: boolean;
+  // send worker metadata on result
+  worker_metadata: boolean;
 }
 
 export interface BrowserWorkerConfig extends HttpWorkerConfig {
@@ -218,6 +220,10 @@ export class CrawlConfig {
 
     if (this.config.store_browser_debug === undefined) {
       this.config.store_browser_debug = false;
+    }
+
+    if (this.config.worker_metadata === undefined) {
+      this.config.worker_metadata = false;
     }
 
     if (!Object.values(ExecutionEnv).includes(this.config.execution_env)) {

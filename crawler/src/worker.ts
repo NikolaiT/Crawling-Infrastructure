@@ -12,8 +12,9 @@ import {TerminationNotification} from "./termination";
 import {Context} from "aws-lambda";
 import {ProxyOptions, ProxyChangeReason, allowed_filter_keys} from "@lib/types/proxy";
 import {IAWSConfig} from "@lib/storage/storage";
-import * as os from 'os';
 import {system} from '@lib/misc/shell';
+import {getIpAddress} from './metadata';
+import * as os from 'os';
 
 export interface IAWSOptions {
   access_key?: string;
@@ -50,9 +51,14 @@ export interface IWorker {
   status: WorkerStatus;
 
   /**
-   * Obtain versioning information for the worker
+   * Obtain version information for the worker
    */
   version(): Promise<any>;
+
+  /**
+   * Obtain worker status metadata
+   */
+  getStatus(): Promise<any>;
 
   /**
    * Initializes the worker.
@@ -183,11 +189,14 @@ export class BaseWorker implements IWorker {
   public status: WorkerStatus;
   public options: any;
   public name: string;
+  public started: any;
+  public ipinfo: any;
   restart_worker: boolean;
   proxyChain: any;
   newProxyUrl?: string;
 
   constructor(config: HttpWorkerConfig | BrowserWorkerConfig, proxy_handler?: ProxyHandler) {
+    this.started = new Date();
     this.num_proxies_obtained = 0;
     this.config = config;
     this.proxy_handler = proxy_handler;
@@ -199,6 +208,7 @@ export class BaseWorker implements IWorker {
     this.restart_worker = false;
     this.name = 'Worker';
     this.proxyChain = require('proxy-chain');
+    this.ipinfo = {};
   }
 
   public async version(): Promise<any> {
@@ -206,7 +216,23 @@ export class BaseWorker implements IWorker {
     return version_info;
   }
 
+  /**
+   * Obtain worker status metadata
+   */
+  public async getStatus(): Promise<any> {
+    let version_info: any = getVersionInfo(require('../package.json'));
+    version_info.status = this.status;
+    version_info.started = this.started;
+    version_info.uptime = (new Date()).valueOf() - this.started.valueOf();
+    version_info.ipinfo = this.ipinfo;
+    return version_info;
+  }
+
   public async setup(): Promise<any> {
+    if (this.config.execution_env === ExecutionEnv.docker) {
+      this.ipinfo = await getIpAddress('https://ipinfo.io/json', true);
+    }
+
     // we are using the apify package https://github.com/apifytech/proxy-chain
     // to make use of proxies that use username/password authentication
     // since we cannot use whitelisted proxies, because we cannot predict our public IP

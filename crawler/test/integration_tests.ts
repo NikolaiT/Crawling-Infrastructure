@@ -96,6 +96,45 @@ describe('worker can crawl with browser', async () => {
   });
 });
 
+describe('browser crawl and returns worker metadata', async () => {
+  it('should return worker status when `worker_metadata` is set to true', async () => {
+    let payload = {
+      aws_config: aws_config,
+      execution_env: ExecutionEnv.docker,
+      items: ['https://ipinfo.io/json'],
+      function_code: getFunc('browser.js'),
+      local_test: true,
+      loglevel: 'verbose',
+      worker_metadata: true,
+    };
+    let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
+    expect(response).to.include.keys(['status', 'message', 'result', 'metadata', 'worker_metadata']);
+    expect(response).to.have.property('status', 200);
+
+    for (let obj of response.result) {
+      expect(obj.result).to.have.length.above(50);
+    }
+
+    expect(response.metadata).to.include.keys(metadata_keys);
+    expect(response.metadata).to.have.property('num_items_crawled', 1);
+    expect(response.metadata).to.have.property('num_items_failed', 0);
+    expect(new Date(response.metadata.crawling_ended)).to.be.above(new Date(response.metadata.crawling_started));
+    expect(response.metadata).to.have.property('bytes_uploaded', 0);
+    expect(response.metadata).to.have.property('avg_items_per_second');
+    expect(response.metadata.avg_items_per_second).to.be.above(0.001);
+    expect(response.metadata.elapsed_crawling_ms).to.be.within(100, 5000);
+    expect(response.metadata.elapsed_crawling_ms).to.be.lt(response.metadata.elapsed_ms);
+
+    // all items in status `completed`
+    for (let item of response.metadata.items) {
+      expect(item).to.have.property('status', QueueItemStatus.completed);
+    }
+
+    console.dir(response.worker_metadata)
+    expect(response.worker_metadata).to.include.keys(['status', 'started', 'uptime', 'ipinfo', 'platform', 'package_info']);
+  });
+});
+
 describe('worker can crawl with http', async () => {
   it('should return valid html string as result', async () => {
     let payload = {

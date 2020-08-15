@@ -7,10 +7,10 @@ import {Item} from "@lib/types/queue";
 const got = require('got');
 
 /**
- * Obtain the public ip.
+ * Obtain the public ip or all metadata
  */
-export async function getIpAddress() {
-  let api_url = getRandomIPApi();
+export async function getIpAddress(api_url: string = '', ret_all: boolean = false) {
+  let url: string = api_url || getRandomIPApi();
 
   let options = {
     headers: {
@@ -21,10 +21,14 @@ export async function getIpAddress() {
   };
 
   try {
-    let response = await got(api_url, options);
+    let response = await got(url, options);
     let parsed = JSON.parse(response.body);
     if (parsed.ip && parsed.ip.length > 0) {
-      return parsed.ip;
+      if (ret_all) {
+        return parsed;
+      } else {
+        return parsed.ip;
+      }
     }
   } catch (err) {
     console.error(`Error requesting IP address with provider ${api_url}: ${err.toString()}`);
@@ -114,6 +118,11 @@ export class MetadataHandler {
     if (this.config.public_ip) {
       response.metadata.public_ip = this.config.public_ip;
     }
+
+    if (!response.worker_metadata) {
+      delete response.worker_metadata;
+    }
+
     return response;
   }
 }

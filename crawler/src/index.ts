@@ -35,6 +35,7 @@ export interface Response {
   message: string;
   result: any;
   metadata: any;
+  worker_metadata: any;
 }
 
 export class WorkerHandler {
@@ -56,7 +57,8 @@ export class WorkerHandler {
       status: 200,
       message: 'ok',
       result: {},
-      metadata: {}
+      metadata: {},
+      worker_metadata: {},
     };
     this.config.loglevel = this.config.loglevel || LogLevel.info;
     this.logger = getLogger(null, 'index', config.loglevel);
