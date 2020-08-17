@@ -19,6 +19,8 @@ ENV HOST=0.0.0.0
 ENV APP_DIR=/crawler
 # generate with:
 # cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1
+
+ENV API_URL=https://167.99.241.135:9001/
 ENV API_KEY=kfTP6E7GgDTtIBZnUQq4skrHGWcuPe1Z
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD 1
 ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/google-chrome-stable
