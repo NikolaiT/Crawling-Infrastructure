@@ -5,8 +5,7 @@ import fs from 'fs';
 import {spawn} from 'child_process';
 const got = require('got');
 
-// get a function key from the db
-async function getConfigKey(key: string) {
+async function getConfig() {
   var options = {
     timeout: 10000,
     method: 'GET',
@@ -15,13 +14,14 @@ async function getConfigKey(key: string) {
     rejectUnauthorized: false,
   };
 
-  let full_url = process.env.API_URL + 'config' + '&API_KEY=' + process.env.API_KEY;
+  let full_url = process.env.API_URL + 'config' + '?API_KEY=' + process.env.API_KEY;
 
   try {
     let response = await got(full_url, options);
-    return response[key];
+    return response;
   } catch (error) {
     console.error(error);
+    return {};
   }
 }
 
@@ -49,20 +49,26 @@ let errfile = fs.openSync('./Xvfb_out.log', 'a');
 
 (async () => {
   // start a Xvfb server to simulate a graphical user interface on allocated servers
-  if (await getConfigKey('start_xvfb_server')) {
-    console.log("[DOCKER] Starting X virtual framebuffer using: Xvfb $DISPLAY -ac -screen 0 $XVFB_WHD -nolisten tcp");
+  let config: any = getConfig();
+  if (config.start_xvfb_server) {
+    console.log(`CrawlWorker[${hostname()}] Starting X virtual framebuffer using...`);
     const args: Array<string> = [
-      process.env['DISPLAY'] || ':99',
-      '-ac',
-      '-screen 0',
-      process.env['XVFB_WHD'] || '1280x720x16',
-      '-nolisten',
+      config.xvfb_display || ':99',
+      'ac',
+      'screen 0',
+      config.xvfb_whd || '1280x720x16',
+      'nolisten',
       'tcp'
     ];
     let child = spawn('Xvfb', args, {
         stdio: [ 'ignore', outfile, errfile], // piping stdout and stderr to out.log
         detached: true
     });
+    if (child.pid) {
+      fs.writeFileSync(outfile, 'pid=' + child.pid);
+    }
+  } else {
+    console.log(`CrawlWorker[${hostname()}] Not Starting X virtual framebuffer.`);
   }
 
   let server = app.listen(PORT, () => {
