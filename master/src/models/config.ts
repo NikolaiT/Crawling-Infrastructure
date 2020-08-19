@@ -35,6 +35,9 @@ const default_config: Config = {
   retry_failed_items: 3,
   max_crawling_time_lambda: 240,
   api_max_concurrency: 100,
+  start_xvfb_server: false,
+  xvfb_display: ':99',
+  xvfb_whd: '1280x720x16',
   regions: [
     {
       "region": "us-east-1",
@@ -222,6 +225,18 @@ const ConfigSchema = new mongoose.Schema({
   },
   api_max_concurrency: {
     type: Number,
+  },
+  start_xvfb_server: {
+    type: Boolean,
+    default: false,
+  },
+  xvfb_display: {
+    type: String,
+    default: ':99'
+  },
+  xvfb_whd: {
+    type: String,
+    default: '1280x720x16'
   },
   regions: {
     type: Object,

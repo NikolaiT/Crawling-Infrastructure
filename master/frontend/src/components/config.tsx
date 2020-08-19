@@ -284,6 +284,39 @@ export class Config extends React.Component<{form: any}, {config: any}> {
             {getFieldDecorator('force_remove_machines', { initialValue: this.state.config.force_remove_machines, valuePropName: 'checked' })(<Switch />)}
           </Form.Item>
 
+          <Form.Item label={
+            <span>
+              Start Xvfb Server in docker machines in order to simulate a graphical user interface&nbsp;
+              <Tooltip title="If this is set to true, all crawling images will start a Xvfb Server.">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+          }>
+            {getFieldDecorator('start_xvfb_server', { initialValue: this.state.config.start_xvfb_server, valuePropName: 'checked' })(<Switch />)}
+          </Form.Item>
+
+          <Form.Item label={
+            <span>
+              xvfb display&nbsp;
+              <Tooltip title="The xvfb display option.">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+          }>
+            {getFieldDecorator('xvfb_display', { initialValue: ':99' })(<Input />)}
+          </Form.Item>
+
+          <Form.Item label={
+            <span>
+              xvfb whd&nbsp;
+              <Tooltip title="The whd display option.">
+              <Icon type="question-circle-o" />
+              </Tooltip>
+            </span>
+          }>
+            {getFieldDecorator('xvfb_display', { initialValue: '1280x720x16' })(<Input />)}
+          </Form.Item>
+
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Update Config

@@ -73,6 +73,12 @@ export interface Config {
   max_crawling_time_lambda: number;
   // how many maximally concurrent functions
   api_max_concurrency: number;
+  // whether a xvfb server should be started on a worker
+  start_xvfb_server: boolean;
+  // xvfb display type
+  xvfb_display: string;
+  // xvfb display dimensions
+  xvfb_whd: string;
   // an array of regions to use for AWS
   regions: any;
   // if true, will restrict demo access
