@@ -14,5 +14,6 @@ export class Controller {
     this.app.route('/').get(this.worker_service.hello.bind(this.worker_service));
     this.app.route('/invokeEvent').post(auth, this.worker_service.invokeEvent.bind(this.worker_service));
     this.app.route('/invokeRequestResponse').post(auth, this.worker_service.invokeRequestResponse.bind(this.worker_service));
+    this.app.route('/blankSlate').post(auth, this.worker_service.blankSlate.bind(this.worker_service));
   }
 }

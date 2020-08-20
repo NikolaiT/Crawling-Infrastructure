@@ -34,7 +34,7 @@ export class WorkerService {
   public static checkApiCall(req: Request, res: Response) {
     let winning: boolean = true;
 
-    if (req.body['API_KEY'] !== process.env.API_KEY && req.params['key'] !== process.env.API_KEY) {
+    if (req.body['API_KEY'] !== process.env.API_KEY && req.params['API_KEY'] !== process.env.API_KEY) {
       res.status(401).send({error: `invalid api key`});
       winning =  false;
     }
@@ -153,7 +153,6 @@ export class WorkerService {
    * Keep a worker running all the time. Do not call setup() and cleanup()
    * on the worker in between API requests. Idea: Reduce latency and response time as much as possible.
    * Prevent browser worker from starting again.
-   *
    */
   public async blankSlate(req: Request, res: Response) {
     if (!WorkerService.checkApiCall(req, res)) return;
@@ -163,7 +162,7 @@ export class WorkerService {
         this.persistantCrawlHandler = new PersistantCrawlHandler(req.body);
       }
       this.state = State.running;
-      await this.persistantCrawlHandler.run(req.body.items).then((response: any) => {
+      await this.persistantCrawlHandler.run(req.body).then((response: any) => {
         this.state = State.initial;
         this.exec_id = uuid_v1();
         response.id = this.exec_id;
@@ -177,5 +176,4 @@ export class WorkerService {
       });
     }
   }
-
 }

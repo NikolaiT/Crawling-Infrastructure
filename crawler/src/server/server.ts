@@ -6,17 +6,23 @@ import {spawn} from 'child_process';
 import got from "got";
 
 async function getConfig() {
-  let full_url = process.env.API_URL + 'config' + '?API_KEY=' + process.env.API_KEY;
-  console.log('Obtaining config from url: ' + full_url);
-  let response = await got(full_url, {
-    timeout: 10000,
-    json: true, // Automatically stringifies the body to JSON
-    rejectUnauthorized: false,
-  });
-  return response.body;
+  if (process.env.API_URL && process.env.API_KEY) {
+    let full_url = process.env.API_URL + 'config' + '?API_KEY=' + process.env.API_KEY;
+    console.log('Obtaining config from url: ' + full_url);
+    try {
+      let response = await got(full_url, {
+        timeout: 10000,
+        json: true, // Automatically stringifies the body to JSON
+        rejectUnauthorized: false,
+      });
+      return response.body;
+    } catch(err) {
+      console.error(err.message);
+      return {};
+    }
+  }
+  return {};
 }
-
-dotenv.config();
 
 let path;
 switch (process.env.NODE_ENV) {
@@ -30,7 +36,25 @@ switch (process.env.NODE_ENV) {
     path = `${process.env.APP_DIR}/config/.env.production`;
 }
 
+if (!fs.existsSync(path)) {
+  if (process.argv.length !== 3) {
+    console.error('please pass path to env file via first command line argument.');
+    process.exit(1);
+  } else {
+    path = process.argv[2];
+    if (!fs.existsSync(path)) {
+      console.error('path does not exist: ' + path);
+      process.exit(1);
+    }
+  }
+}
+
 dotenv.config({ path: path });
+
+if (!process.env.API_KEY) {
+  console.error('env variable API_KEY required. Aborting.');
+  process.exit(1);
+}
 
 const PORT = process.env.PORT || 3333;
 const HOST = process.env.HOST || '0.0.0.0';

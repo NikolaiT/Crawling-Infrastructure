@@ -6,13 +6,11 @@ export function startProxyServer() {
     port: 8000,
     // Enables verbose logging
     verbose: true,
-    prepareRequestFunction: (request: any, username: any, password: any, hostname: any, port: any, isHttp: any, connectionId: any) => {
-      //console.log(request.headers);
-      let upstream_proxy = request.headers['x-no-forward-upstream-proxy'];
+    prepareRequestFunction: (params: any) => {
+      var {request, username, password, hostname, port, isHttp, connectionId} = params;
+      console.log(request.headers);
+      let upstream_proxy = request.headers['x-no-forward-upstream-proxy'] || null;
       console.log('Using upstream proxy: ' + upstream_proxy);
-      if (!upstream_proxy) {
-        throw Error('please set header `x-no-forward-upstream-proxy`');
-      }
       return {
         requestAuthentication: false,
         upstreamProxyUrl: upstream_proxy,
@@ -21,7 +19,7 @@ export function startProxyServer() {
   });
 
   server.listen(() => {
-    console.log(`Proxy server is listening on port ${server.port}`);
+    console.log(`ProxyServer is listening on port ${server.port}`);
   });
 
   // Emitted when HTTP connection is closed
