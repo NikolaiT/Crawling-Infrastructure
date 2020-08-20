@@ -38,7 +38,7 @@ describe('simple version is returned', async () => {
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
     expect(response).to.have.property('status', 200);
-    expect(response.result).to.include.keys(['name', 'version', 'description', 'dependencies', 'platform']);
+    expect(response.result).to.include.keys(['platform', 'package_info']);
   });
 });
 
@@ -56,7 +56,7 @@ describe('complex version is returned', async () => {
     console.log(response);
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata']);
     expect(response).to.have.property('status', 200);
-    expect(response.result).to.include.keys(['name', 'version', 'description', 'dependencies', 'browser_version', 'platform']);
+    expect(response.result).to.include.keys(['platform', 'package_info', 'browser_version']);
     expect(response.result.platform).to.include.keys(['type', 'release', 'platform', 'totalmem', 'freemem', 'uptime']);
   });
 });
@@ -106,6 +106,7 @@ describe('browser crawl and returns worker metadata', async () => {
       local_test: true,
       loglevel: 'verbose',
       worker_metadata: true,
+      apply_evasion: false,
     };
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');
     expect(response).to.include.keys(['status', 'message', 'result', 'metadata', 'worker_metadata']);
@@ -130,8 +131,11 @@ describe('browser crawl and returns worker metadata', async () => {
       expect(item).to.have.property('status', QueueItemStatus.completed);
     }
 
-    console.dir(response.worker_metadata)
+    //console.dir(response.worker_metadata)
     expect(response.worker_metadata).to.include.keys(['status', 'started', 'uptime', 'ipinfo', 'platform', 'package_info']);
+    expect(response.worker_metadata.package_info).to.include.keys(['name', 'version', 'description', 'dependencies']);
+    expect(response.worker_metadata.platform).to.include.keys(['hostname', 'type', 'release', 'totalmem', 'uptime']);
+    expect(response.worker_metadata.ipinfo).to.include.keys(['ip']);
   });
 });
 

@@ -298,7 +298,7 @@ export class Config extends React.Component<{form: any}, {config: any}> {
           <Form.Item label={
             <span>
               xvfb display&nbsp;
-              <Tooltip title="The xvfb display option.">
+              <Tooltip title="The xvfb display option. By default, it is set to ':99'">
               <Icon type="question-circle-o" />
               </Tooltip>
             </span>
@@ -309,12 +309,12 @@ export class Config extends React.Component<{form: any}, {config: any}> {
           <Form.Item label={
             <span>
               xvfb whd&nbsp;
-              <Tooltip title="The whd display option.">
+              <Tooltip title="The xvfb whd parameters: Width, height and dimension of the screen.">
               <Icon type="question-circle-o" />
               </Tooltip>
             </span>
           }>
-            {getFieldDecorator('xvfb_display', { initialValue: '1280x720x16' })(<Input />)}
+            {getFieldDecorator('xvfb_whd', { initialValue: '1280x720x16' })(<Input />)}
           </Form.Item>
 
           <Form.Item>
