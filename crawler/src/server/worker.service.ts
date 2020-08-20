@@ -1,6 +1,7 @@
 import {Request, Response} from "express";
 import * as dotenv from "dotenv";
 import {WorkerHandler} from '../index';
+import {PersistantCrawlHandler} from '../persistant_handler';
 import {ResultPolicy} from '@lib/types/common';
 import {v1 as uuid_v1} from 'uuid';
 import {hostname, platform, totalmem, uptime} from 'os';
@@ -21,11 +22,13 @@ export class WorkerService {
   state: State;
   exec_id: string;
   logger: Logger;
+  persistantCrawlHandler: PersistantCrawlHandler | null;
 
   constructor() {
     this.state = State.initial;
     this.exec_id = uuid_v1();
     this.logger = getLogger(null, 'worker.service', LogLevel.info);
+    this.persistantCrawlHandler = null;
   }
 
   public static checkApiCall(req: Request, res: Response) {
@@ -145,4 +148,34 @@ export class WorkerService {
       });
     }
   }
+
+  /**
+   * Keep a worker running all the time. Do not call setup() and cleanup()
+   * on the worker in between API requests. Idea: Reduce latency and response time as much as possible.
+   * Prevent browser worker from starting again.
+   *
+   */
+  public async blankSlate(req: Request, res: Response) {
+    if (!WorkerService.checkApiCall(req, res)) return;
+
+    if (this.state === State.initial) {
+      if (this.persistantCrawlHandler === null) {
+        this.persistantCrawlHandler = new PersistantCrawlHandler(req.body);
+      }
+      this.state = State.running;
+      await this.persistantCrawlHandler.run(req.body.items).then((response: any) => {
+        this.state = State.initial;
+        this.exec_id = uuid_v1();
+        response.id = this.exec_id;
+        res.status(200).json(response);
+      }).catch((err: any) => {
+        this.state = State.failed;
+        res.status(500).json({
+          status: 500,
+          error: err.toString()
+        });
+      });
+    }
+  }
+
 }

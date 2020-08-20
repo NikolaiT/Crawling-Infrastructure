@@ -44,6 +44,10 @@ export class CrawlHandler {
     this.logger = getLogger(null, 'handler', config.loglevel);
   }
 
+  /**
+   * Setup, run and close the worker. The underlying browserWorker/httpWorker state is not saved,
+   * and started and closed after crawling.
+   */
   public async run(items: Array<any>, meta: MetadataHandler, proxy_handler?: ProxyHandler) {
     let worker = null;
 

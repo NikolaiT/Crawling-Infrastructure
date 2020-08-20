@@ -74,7 +74,7 @@ export class WorkerHandler {
 
     let is_local_crawl: boolean = Array.isArray(this.config.items) && this.config.items.length > 0;
     this.logger.debug(JSON.stringify(this.config, null, 2));
-    this.logger.info(`Starting worker with task_id=${this.config.task_id} and worker_id=${this.config.worker_id}`);
+    this.logger.info(`Starting worker with is_local_crawl=${is_local_crawl}, task_id=${this.config.task_id} and worker_id=${this.config.worker_id}`);
 
     // we only need a public IP to test that proxies are working
     // therefore we only obtain it when `proxy_options` is passed
@@ -174,7 +174,6 @@ export class WorkerHandler {
 
   private async runAndStore() {
     let crawler: CrawlHandler = new CrawlHandler(this.config, this.context, this.response);
-
     await crawler.run(this.items, this.meta, this.proxy_handler);
 
     this.logger.debug(JSON.stringify(this.response.result, null, 2));

@@ -105,6 +105,10 @@ export class ApiService {
       }
     }
 
+    if (obj.worker_metadata !== undefined) {
+      crawl_task.worker_metadata = obj.worker_metadata;
+    }
+
     if (Array.isArray(obj.items)) {
       crawl_task.num_items = obj.items.length;
     }

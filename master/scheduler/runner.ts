@@ -352,12 +352,14 @@ export class CrawlRunner {
       mongodb_url: process.env.MONGODB_CONNECTION_URL,
     };
 
+    // crawl options are passed flattened to crawler api
     for (let key of crawl_options_keys) {
       if (task.crawl_options[key]) {
         worker_payload[key] = task.crawl_options[key];
       }
     }
 
+    // copy rest of the options
     if (create_from_model === false) {
       for (let key of Object.keys(task)) {
         if (key !== 'crawl_options' && !key.startsWith('_')) {
