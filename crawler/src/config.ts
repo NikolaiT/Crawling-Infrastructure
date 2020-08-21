@@ -184,8 +184,6 @@ export class CrawlConfig {
 
     this.config.default_navigation_timeout = this.config.default_navigation_timeout || 40000;
 
-    this.config.user_agent = this.config.user_agent || 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3942.0 Safari/537.36';
-
     this.config.request_timeout = this.config.request_timeout || 15000;
 
     // if we upload to the cloud and uncompress is not defined, compress should be set to true
@@ -228,6 +226,8 @@ export class CrawlConfig {
 
     if (!Object.values(ExecutionEnv).includes(this.config.execution_env)) {
       this.config.execution_env = ExecutionEnv.lambda;
+    } else if (Object.values(ExecutionEnv).includes(process.env.EXECUTION_ENV as ExecutionEnv)) {
+      this.config.execution_env = process.env.EXECUTION_ENV as ExecutionEnv;
     }
 
     this.config.result_policy = this.config.result_policy || ResultPolicy.return;

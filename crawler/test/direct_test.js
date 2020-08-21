@@ -36,11 +36,11 @@ let payload = {
 };
 
 let payload2 = {
-  items: ['what is my city?'],
+  items: ['what is my ip address?'],
   function_code: getFunc('new_google_scraper.js'),
   chromium_binary: '/usr/bin/chromium-browser',
   API_KEY: process.env.API_KEY,
-  //proxy: 'http://167.99.241.135:3128',
+  proxy: 'http://167.99.241.135:3128',
   loglevel: 'verbose',
 };
 

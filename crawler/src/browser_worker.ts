@@ -155,7 +155,7 @@ export class BrowserWorker extends BaseWorker {
     return info;
   }
 
-  private async setupPage() {
+  public async setupPage() {
     this.page = await this.browser.newPage();
 
     // throw page errors by default
@@ -348,6 +348,14 @@ export class BrowserWorker extends BaseWorker {
     if (this.user_agent_obj) {
       this.user_agent_data = this.user_agent_obj.data;
       user_agent = this.user_agent_obj.toString();
+    }
+
+    if (!user_agent) {
+      if (this.config.execution_env === ExecutionEnv.docker || process.env.CHROME_VERSION) {
+        this.logger.verbose(`Setting user_agent from chrome version: ${process.env.CHROME_VERSION}`);
+        // get user agent from CHROME_VERSION env variable
+        user_agent = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.env.CHROME_VERSION} Safari/537.36`;
+      }
     }
 
     // when set, change the timezone and language environment variables

@@ -4,11 +4,14 @@ import {hostname} from 'os';
 import fs from 'fs';
 import {spawn} from 'child_process';
 import got from "got";
+import {Logger, getLogger, LogLevel} from '@lib/misc/logger';
+
+let logger = getLogger(null, 'CrawlWorker', LogLevel.info);
 
 async function getConfig() {
   if (process.env.API_URL && process.env.API_KEY) {
     let full_url = process.env.API_URL + 'config' + '?API_KEY=' + process.env.API_KEY;
-    console.log('Obtaining config from url: ' + full_url);
+    logger.info('Obtaining config from url: ' + full_url);
     try {
       let response = await got(full_url, {
         timeout: 10000,
@@ -38,12 +41,12 @@ switch (process.env.NODE_ENV) {
 
 if (!fs.existsSync(path)) {
   if (process.argv.length !== 3) {
-    console.error('please pass path to env file via first command line argument.');
+    logger.error('please pass path to env file via first command line argument.');
     process.exit(1);
   } else {
     path = process.argv[2];
     if (!fs.existsSync(path)) {
-      console.error('path does not exist: ' + path);
+      logger.error('path does not exist: ' + path);
       process.exit(1);
     }
   }
@@ -52,7 +55,7 @@ if (!fs.existsSync(path)) {
 dotenv.config({ path: path });
 
 if (!process.env.API_KEY) {
-  console.error('env variable API_KEY required. Aborting.');
+  logger.error('env variable API_KEY required. Aborting.');
   process.exit(1);
 }
 
@@ -64,9 +67,9 @@ let outfile = fs.openSync('./Xvfb_out.log', 'a');
 (async () => {
   // start a Xvfb server to simulate a graphical user interface on allocated servers
   let config: any = await getConfig();
-  console.log(`CrawlWorker[${hostname()}] config: ${JSON.stringify(config)}`);
+  logger.verbose(`CrawlWorker[${hostname()}] config: ${JSON.stringify(config)}`);
   if (config.start_xvfb_server) {
-    console.log(`CrawlWorker[${hostname()}] Starting X virtual framebuffer using: xvfb_display=${config.xvfb_display}, xvfb_whd=${config.xvfb_whd}`);
+    logger.info(`CrawlWorker[${hostname()}] Starting X virtual framebuffer using: xvfb_display=${config.xvfb_display}, xvfb_whd=${config.xvfb_whd}`);
     // Xvfb $DISPLAY -ac -screen 0 $XVFB_WHD -nolisten tcp &
     const args: Array<string> = [
       config.xvfb_display || ':99',
@@ -91,18 +94,18 @@ let outfile = fs.openSync('./Xvfb_out.log', 'a');
     });
 
     if (child.pid) {
-      console.log(`CrawlWorker[${hostname()}] Xvfb pid: ${child.pid}`);
+      logger.info(`CrawlWorker[${hostname()}] Xvfb pid: ${child.pid}`);
       fs.writeFileSync(outfile, 'pid=' + child.pid);
     }
   } else {
-    console.log(`CrawlWorker[${hostname()}] Not Starting X virtual framebuffer.`);
+    logger.info(`CrawlWorker[${hostname()}] Not Starting X virtual framebuffer.`);
     // unset the USING_XVFB env variable
     // crawler will be launched with headless = false
     delete process.env.USING_XVFB;
   }
 
   let server = app.listen(PORT, () => {
-    console.log(`CrawlWorker[${hostname()}] with pid ${process.pid} listening on port ${PORT}`);
+    logger.info(`CrawlWorker[${hostname()}] with pid ${process.pid} listening on port ${PORT}`);
   });
 
   // https://github.com/expressjs/express/issues/3330

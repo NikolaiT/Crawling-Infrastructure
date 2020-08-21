@@ -10,7 +10,7 @@ import { BrowserWorker } from './browser_worker';
 import { HttpWorker} from './http_worker';
 import { startProxyServer } from './proxy_server';
 import {puppeteer_proxy_error_needles, http_codes_proxy_failure} from './handler';
-import {ResultPolicy } from '@lib/types/common';
+import {ResultPolicy, ExecutionEnv} from '@lib/types/common';
 
 export enum State {
   initial = 'initial',
@@ -38,6 +38,7 @@ export class PersistantCrawlHandler {
     if (this.state === State.initial) {
       // start the proxy server in the background.
       let server = startProxyServer();
+
       this.config.worker_id = 1;
       // @ts-ignore
       this.config.result_policy = ResultPolicy.return;
@@ -80,9 +81,16 @@ export class PersistantCrawlHandler {
 
     try {
       let WorkerClass = eval('(' + this.config.function_code + ')');
-      let worker = new WorkerClass(this.browser_worker.page, this.config.options);
+      let worker = new WorkerClass();
+      this.logger.info('Using crawler: ' + worker.constructor.name);
+      // copy functionality from parent class
+      // @TODO: find better way
+      worker.page = this.browser_worker.page;
+      worker.options = this.browser_worker.options;
       worker.logger = this.browser_worker.logger;
       worker.sleep = this.browser_worker.sleep;
+      worker.random_sleep = this.browser_worker.random_sleep;
+      worker.clean_html = this.browser_worker.clean_html;
 
       for (let i = 0; i < items.length; i++) {
         let item = items[i];

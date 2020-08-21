@@ -34,11 +34,14 @@ ENV USE_CHROME_UNSTABLE 0
 ENV CHROME_EXECUTABLE "google-chrome-stable"
 # whether the virtual framebuffer x server is launched
 ENV USING_XVFB 1
+ENV EXECUTION_ENV 'docker'
 
 # Select Chrome version, must be compatible with Puppeteer version!
 # Find versions at https://www.ubuntuupdates.org/pm/google-chrome-stable
 # or https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
-ENV CHROME_VERSION="84.0.4147.105-1"
+
+# !!! IMPORTANT: REMOVE THE TRAILING -1 FROM THE VERSION. 84.0.4147.135-1 => 84.0.4147.135
+ENV CHROME_VERSION="84.0.4147.135"
 
 # Create app directory
 WORKDIR $APP_DIR
