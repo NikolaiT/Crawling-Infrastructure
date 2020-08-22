@@ -156,6 +156,15 @@ export class BrowserWorker extends BaseWorker {
   }
 
   public async setupPage() {
+    // try to close page before opening a new page
+    if (this.page) {
+      try {
+        await this.page.close();
+      } catch (err) {
+        this.logger.error(`Could not page.close(): ${err.toString()}`);
+      }
+    }
+
     this.page = await this.browser.newPage();
 
     // throw page errors by default

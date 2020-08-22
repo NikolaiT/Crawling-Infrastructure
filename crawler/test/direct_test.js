@@ -27,7 +27,7 @@ async function call(payload) {
 }
 
 let payload = {
-  items: ['http://ipinfo.io/json'],
+  items: ['https://ipinfo.io/json'],
   function_code: getFunc('new_browser.js'),
   chromium_binary: '/usr/bin/chromium-browser',
   API_KEY: process.env.API_KEY,
@@ -40,7 +40,16 @@ let payload2 = {
   function_code: getFunc('new_google_scraper.js'),
   chromium_binary: '/usr/bin/chromium-browser',
   API_KEY: process.env.API_KEY,
-  proxy: 'http://167.99.241.135:3128',
+  //proxy: 'http://167.99.241.135:3128',
+  loglevel: 'verbose',
+};
+
+let payload3 = {
+  items: ['what is my ip address?'],
+  function_code: getFunc('new_bing_scraper.js'),
+  chromium_binary: '/usr/bin/chromium-browser',
+  API_KEY: process.env.API_KEY,
+  //proxy: 'http://167.99.241.135:3128',
   loglevel: 'verbose',
 };
 
