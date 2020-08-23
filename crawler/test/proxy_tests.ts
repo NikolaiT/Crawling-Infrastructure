@@ -17,7 +17,7 @@ describe('proxy via proxy-chain works in the browser', async () => {
       loglevel: 'verbose',
       local_test: true,
       items: ['https://ip.seeip.org/json', ],
-      proxies: ['http://sp92712661:Leadgy123@gate.smartproxy.com:7000', ],
+      proxies: ['', ],
       mongodb_url: process.env.MONGODB_CONNECTION_URL,
     };
     let response = await endpoint(payload, 'invokeRequestResponse', 'POST');

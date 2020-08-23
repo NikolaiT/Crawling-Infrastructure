@@ -28,10 +28,10 @@ async function call(payload) {
 
 let payload = {
   items: ['https://ipinfo.io/json'],
-  function_code: getFunc('new_browser.js'),
+  function_code: getFunc('new_render.js'),
   chromium_binary: '/usr/bin/chromium-browser',
   API_KEY: process.env.API_KEY,
-  proxy: 'http://167.99.241.135:3128',
+  //proxy: 'http://167.99.241.135:3128',
   loglevel: 'verbose',
 };
 

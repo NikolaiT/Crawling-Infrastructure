@@ -35,8 +35,6 @@ class App {
     // compress all responses
     this.app.use(compression());
 
-    // @todo: check API credentials and required keys here
-
     // prettify json
     this.app.set('json spaces', 2);
   }

@@ -26,6 +26,7 @@ export class PersistantCrawlHandler {
   browser_worker: BrowserWorker | null;
   proxy_state: any;
   proxy_server: any;
+  counter: number;
 
   constructor(config: HttpWorkerConfig | BrowserWorkerConfig) {
     this.logger = getLogger(null, 'persistantHandler', config.loglevel);
@@ -38,6 +39,7 @@ export class PersistantCrawlHandler {
       proxy: null
     };
     this.proxy_server = null;
+    this.counter = 0;
   }
 
   public async setup() {
@@ -64,7 +66,7 @@ export class PersistantCrawlHandler {
     }
   }
 
-  private async updateBrowserConfig(body: any) {
+  private updateConfig(body: any) {
     let update_keys: Array<string> = ['function_code', 'items',
      'loglevel', 'options', 'worker_metadata', 'cookies',
       'default_accept_language', 'random_accept_language', 'block_webrtc',
@@ -75,11 +77,6 @@ export class PersistantCrawlHandler {
         // @ts-ignore
         this.config[key] = body[key];
       }
-    }
-    // reload the browser page and close the current one
-    if (this.browser_worker) {
-      this.logger.info('browser_worker.setupPage()');
-      await this.browser_worker.setupPage();
     }
   }
 
@@ -107,6 +104,7 @@ export class PersistantCrawlHandler {
    * are not required during startup of the browser.
    */
   public async run(body: any) {
+    await this.updateConfig(body);
     await this.setup();
     const result: any = [];
 
@@ -115,7 +113,11 @@ export class PersistantCrawlHandler {
     }
 
     let items = body.items || [];
-    await this.updateBrowserConfig(body);
+    // reload the browser page and close the current one
+    // only reload the browser page after at least one invocatoin occured
+    if (this.browser_worker && this.counter > 0) {
+      await this.browser_worker.setupPage(body.user_agent || '');
+    }
 
     this.proxy_state.proxy = null;
     if (body.proxy) {
@@ -171,6 +173,7 @@ export class PersistantCrawlHandler {
       this.logger.error(error.stack);
     } finally {
       await this.restartProxyServer();
+      this.counter++;
     }
     return result;
   }

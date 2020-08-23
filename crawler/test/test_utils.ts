@@ -116,10 +116,10 @@ export async function beforeTest(num_tasks: number = 0, env: Array<string> = [])
       env_string = '--env ' + env.join(' --env ');
     }
 
-    let cmd = 'docker run --detach -p 4444:4444 --env PORT=4444 tschachn/crawl_worker:latest';
+    let cmd = 'docker run --network="host" --detach -p 4444:4444 --env PORT=4444 tschachn/crawl_worker:latest';
 
     if (env_string) {
-      cmd = `docker run --detach -p 4444:4444 --env PORT=4444 ${env_string} tschachn/crawl_worker:latest`;
+      cmd = `docker run --network="host" --detach -p 4444:4444 --env PORT=4444 ${env_string} tschachn/crawl_worker:latest`;
     }
 
     console.log(cmd);

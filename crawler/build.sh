@@ -21,3 +21,4 @@ echo "Test the crawler with: "
 
 echo "mocha --timeout 300000 -r ts-node/register test/integration_tests.ts"
 echo "mocha --timeout 300000 -r ts-node/register test/worker_test.ts"
+echo "mocha --timeout 300000 -r ts-node/register test/more_proxy_tests.ts"

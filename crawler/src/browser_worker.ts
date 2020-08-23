@@ -155,7 +155,8 @@ export class BrowserWorker extends BaseWorker {
     return info;
   }
 
-  public async setupPage() {
+  public async setupPage(user_agent: string = '') {
+    this.logger.info(`setupPage()`);
     // try to close page before opening a new page
     if (this.page) {
       try {
@@ -275,6 +276,10 @@ export class BrowserWorker extends BaseWorker {
       );
     }
 
+    if (user_agent) {
+      await this.page.setUserAgent(user_agent);
+    }
+
     if (this.config.execution_env === ExecutionEnv.local) {
       if (this.config.test_evasion) {
         this.logger.info('Testing the stealth plugin...');
@@ -336,6 +341,7 @@ export class BrowserWorker extends BaseWorker {
      }
    */
   private async startBrowser() {
+    this.logger.info(`startBrowser()`);
     let pptr_options: any = {
       headless: this.config.headless === undefined ? true : this.config.headless,
       args: [],
@@ -487,6 +493,8 @@ export class BrowserWorker extends BaseWorker {
    * within a docker environment.
    */
   private async configureDockerBrowser(): Promise<any> {
+    this.logger.info(`configureDockerBrowser()`);
+
     if (process.env.USING_XVFB === '1' && process.env.XVFB_WHD) {
       let dimensions = process.env.XVFB_WHD.split('x');
       // randomize the viewport a bit, in order to prevent bot networks such as Distil to
@@ -556,6 +564,8 @@ export class BrowserWorker extends BaseWorker {
    * @param pptr_options
    */
   private async configureAwsLambdaBrowser(pptr_options: any) {
+    this.logger.info(`configureAwsLambdaBrowser()`);
+
     const chromium = require('chrome-aws-lambda');
     // default puppeteer args originate from
     // https://github.com/alixaxel/chrome-aws-lambda

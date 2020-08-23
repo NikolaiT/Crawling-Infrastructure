@@ -224,10 +224,12 @@ export class CrawlConfig {
       this.config.worker_metadata = false;
     }
 
-    if (!Object.values(ExecutionEnv).includes(this.config.execution_env)) {
-      this.config.execution_env = ExecutionEnv.lambda;
-    } else if (Object.values(ExecutionEnv).includes(process.env.EXECUTION_ENV as ExecutionEnv)) {
+    // set execution_env from environment variable EXECUTION_ENV
+    if (Object.values(ExecutionEnv).includes(process.env.EXECUTION_ENV as ExecutionEnv)) {
       this.config.execution_env = process.env.EXECUTION_ENV as ExecutionEnv;
+    } else if (!Object.values(ExecutionEnv).includes(this.config.execution_env)) {
+      // when this.config.execution_env is unset, set it to ExecutionEnv.lambda
+      this.config.execution_env = ExecutionEnv.lambda;
     }
 
     this.config.result_policy = this.config.result_policy || ResultPolicy.return;

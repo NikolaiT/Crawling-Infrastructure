@@ -27,37 +27,30 @@ async function getConfig() {
   return {};
 }
 
-let path;
-switch (process.env.NODE_ENV) {
-  case "test":
-    path = `${process.env.APP_DIR}/config/.env.test`;
-    break;
-  case "production":
-    path = `${process.env.APP_DIR}/config/.env.production`;
-    break;
-  default:
-    path = `${process.env.APP_DIR}/config/.env.production`;
-}
-
-if (!fs.existsSync(path)) {
-  if (process.argv.length !== 3) {
-    logger.error('please pass path to env file via first command line argument.');
-    process.exit(1);
-  } else {
-    path = process.argv[2];
+function initEnv() {
+  if (process.argv.length === 3) {
+    let path = process.argv[2];
     if (!fs.existsSync(path)) {
-      logger.error('path does not exist: ' + path);
+      logger.error('env path does not exist: ' + path);
       process.exit(1);
+    } else {
+      dotenv.config({ path: path });
+    }
+  }
+
+  const required: Array<string> = ['API_KEY', 'API_URL', 'CHROME_VERSION', 'PUPPETEER_EXECUTABLE_PATH', 'EXECUTION_ENV'];
+
+  for (let key of required) {
+    if (process.env[key] === undefined) {
+      logger.error(`ENV variable ${key} required. Aborting.`);
+      process.exit(1);
+    } else {
+      logger.info(`ENV variable ${key}=${process.env[key]}`);
     }
   }
 }
 
-dotenv.config({ path: path });
-
-if (!process.env.API_KEY) {
-  logger.error('env variable API_KEY required. Aborting.');
-  process.exit(1);
-}
+initEnv();
 
 const PORT = process.env.PORT || 3333;
 const HOST = process.env.HOST || '0.0.0.0';
