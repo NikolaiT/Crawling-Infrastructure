@@ -61,7 +61,7 @@ let outfile = fs.openSync('./Xvfb_out.log', 'a');
   // start a Xvfb server to simulate a graphical user interface on allocated servers
   let config: any = await getConfig();
   logger.verbose(`CrawlWorker[${hostname()}] config: ${JSON.stringify(config)}`);
-  if (config.start_xvfb_server) {
+  if (config.start_xvfb_server && process.env.USING_XVFB === '1') {
     logger.info(`CrawlWorker[${hostname()}] Starting X virtual framebuffer using: xvfb_display=${config.xvfb_display}, xvfb_whd=${config.xvfb_whd}`);
     // Xvfb $DISPLAY -ac -screen 0 $XVFB_WHD -nolisten tcp &
     const args: Array<string> = [

@@ -27,7 +27,7 @@ let proxies = [
        start = new Date();
        let payload = {
          items: [kw],
-         function_code: getFunc('new_google_scraper.js'),
+         crawler: 'google',
          API_KEY: process.env.API_KEY,
          loglevel: 'info',
        };
@@ -56,7 +56,7 @@ describe('changing proxies works while browser keeps alive', async () => {
     for (let proxy of proxies) {
       let payload = {
         items: ['https://ipinfo.io/json'],
-        function_code: getFunc('new_render.js'),
+        crawler: 'render',
         API_KEY: process.env.API_KEY,
         proxy: proxy.url,
         loglevel: 'info',
@@ -81,7 +81,7 @@ describe('crawling google works with proxies', async () => {
     for (let proxy of proxies) {
       let payload = {
         items: ['what is my ip address?'],
-        function_code: getFunc('new_google_scraper.js'),
+        crawler: 'google',
         API_KEY: process.env.API_KEY,
         proxy: proxy.url,
         loglevel: 'info',
@@ -107,7 +107,7 @@ describe('user agent changes on subsequent crawls', async () => {
     const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36';
     let payload = {
       items: ['http://0.0.0.0:8888/headers'],
-      function_code: getFunc('new_render.js'),
+      crawler: 'render',
       API_KEY: process.env.API_KEY,
       loglevel: 'info',
       user_agent: ua
@@ -128,7 +128,7 @@ describe('custom headers can be set', async () => {
     };
     let payload = {
       items: ['http://0.0.0.0:8888/headers'],
-      function_code: getFunc('new_render.js'),
+      crawler: 'render',
       API_KEY: process.env.API_KEY,
       loglevel: 'verbose',
       headers: custom_headers

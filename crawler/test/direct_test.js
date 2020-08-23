@@ -26,33 +26,45 @@ async function call(payload) {
   }
 }
 
+async function callRemote(payload) {
+  try {
+    let response = await got('http://167.99.241.135:3333/blankSlate', {
+      method: 'POST',
+      timeout: 30000,
+      body: payload,
+      json: true,
+      https: {
+        rejectUnauthorized: false,
+      }
+    });
+    return response.body;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 let payload = {
   items: ['https://ipinfo.io/json'],
   function_code: getFunc('new_render.js'),
-  chromium_binary: '/usr/bin/chromium-browser',
   API_KEY: process.env.API_KEY,
-  //proxy: 'http://167.99.241.135:3128',
-  loglevel: 'verbose',
+  crawler: 'render'
 };
 
 let payload2 = {
-  items: ['what is my ip address?'],
+  items: ['What is my IP address?'],
   function_code: getFunc('new_google_scraper.js'),
-  chromium_binary: '/usr/bin/chromium-browser',
   API_KEY: process.env.API_KEY,
-  //proxy: 'http://167.99.241.135:3128',
-  loglevel: 'verbose',
+  crawler: 'google'
 };
 
 let payload3 = {
-  items: ['what is my ip address?'],
+  items: ['no space no hope'],
   function_code: getFunc('new_bing_scraper.js'),
-  chromium_binary: '/usr/bin/chromium-browser',
   API_KEY: process.env.API_KEY,
+  crawler: 'bing'
   //proxy: 'http://167.99.241.135:3128',
-  loglevel: 'verbose',
 };
 
 (async () => {
-  console.dir(await call(payload), {depth: null, colors: true});
+  console.dir(await call(payload2), {depth: null, colors: true});
 })();

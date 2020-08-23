@@ -211,4 +211,3 @@ export function downloadMaybeGzipped(url: string): Promise<string> {
     });
   });
 }
-

@@ -11,6 +11,7 @@ import { HttpWorker} from './http_worker';
 import { startProxyServer } from './proxy_server';
 import {puppeteer_proxy_error_needles, http_codes_proxy_failure} from './handler';
 import {ResultPolicy, ExecutionEnv} from '@lib/types/common';
+const got = require('got');
 
 export enum State {
   initial = 'initial',
@@ -27,6 +28,7 @@ export class PersistantCrawlHandler {
   proxy_state: any;
   proxy_server: any;
   counter: number;
+  crawler_cache: any;
 
   constructor(config: HttpWorkerConfig | BrowserWorkerConfig) {
     this.logger = getLogger(null, 'persistantHandler', config.loglevel);
@@ -40,6 +42,7 @@ export class PersistantCrawlHandler {
     };
     this.proxy_server = null;
     this.counter = 0;
+    this.crawler_cache = {};
   }
 
   public async setup() {
@@ -99,6 +102,41 @@ export class PersistantCrawlHandler {
     });
   }
 
+  // Get crawler code from github
+  // cache the code for speed
+  private async getCrawlerCode(crawler_name: string) {
+    let crawlers = {
+      render: 'new_render.js',
+      google: 'new_google_scraper.js',
+      bing: 'new_bing_scraper.js',
+    }
+
+    if (!Object.keys(crawlers).includes(crawler_name)) {
+      return false;
+    }
+
+    if (this.crawler_cache[crawler_name]) {
+      this.logger.info(`Using cache for crawler ${crawler_name}`);
+      return this.crawler_cache[crawler_name];
+    }
+
+    try {
+      // @ts-ignore
+      let base_url = `https://raw.githubusercontent.com/NikolaiT/scrapeulous/master/${crawlers[crawler_name]}`;
+      let response = await got(base_url, {
+        method: 'GET',
+        timeout: 10000,
+      });
+      let code = response.body;
+      this.logger.info(`Downloaded ${code.length} bytes of code from ${base_url}`);
+      this.crawler_cache[crawler_name] = code;
+      return code;
+    } catch (err) {
+      this.logger.error(`Failed obtaining crawler code: ${err}`);
+      return false;
+    }
+  }
+
   /**
    * Each run() function call can update some config properties that
    * are not required during startup of the browser.
@@ -128,7 +166,14 @@ export class PersistantCrawlHandler {
     try {
       let worker = null;
       let WorkerClass = null;
-      WorkerClass = eval('(' + this.config.function_code + ')');
+      let function_code = await this.getCrawlerCode(body.crawler);
+      if (function_code === false) {
+        return {
+          error: 'invalid crawler propery. Allowed: crawler: google | bing | render',
+        }
+      }
+
+      WorkerClass = eval('(' + function_code + ')');
       worker = new WorkerClass();
       this.logger.info('Using crawler: ' + worker.constructor.name);
       // copy functionality from parent class

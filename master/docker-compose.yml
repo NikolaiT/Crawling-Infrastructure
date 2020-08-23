@@ -81,6 +81,8 @@ services:
       - crawlinfra
     ports:
       - "3333:3333"
+    expose:
+      - "3333:3333"
     environment:
       - HOST=0.0.0.0
       - USING_XVFB=1
@@ -110,6 +112,8 @@ services:
     networks:
       - crawlinfra
     ports:
+      - "4444:4444"
+    expose:
       - "4444:4444"
     environment:
       - HOST=0.0.0.0
