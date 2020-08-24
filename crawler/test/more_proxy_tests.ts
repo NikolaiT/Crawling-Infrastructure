@@ -152,6 +152,19 @@ describe('language changes on subsequent crawls', async () => {
   });
 });
 
+describe('fingerprintjs', async () => {
+  it('', async () => {
+    let payload = {
+      items: ['file:///crawler/test/fingerprint/index.html'],
+      crawler: 'raw',
+      API_KEY: process.env.API_KEY,
+      loglevel: 'verbose',
+    };
+    let response = await endpoint(payload, 'blankSlate', 'POST');
+    console.log(response);
+  });
+});
+
 after(async () => {
   await test_server.close(() => {
     console.log('test server closed');

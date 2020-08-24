@@ -160,6 +160,7 @@ export class BrowserWorker extends BaseWorker {
     // try to close page before opening a new page
     if (this.page) {
       try {
+        this.logger.info(`Closing old page...`);
         await this.page.close();
       } catch (err) {
         this.logger.error(`Could not page.close(): ${err.toString()}`);
@@ -280,39 +281,38 @@ export class BrowserWorker extends BaseWorker {
       await this.page.setUserAgent(user_agent);
     }
 
-    if (this.config.execution_env === ExecutionEnv.local) {
-      if (this.config.test_evasion) {
-        this.logger.info('Testing the stealth plugin...');
+    if (this.config.test_evasion) {
+      this.logger.info('Testing the StealthPlugin()');
+      await this.page.goto('https://arh.antoinevastel.com/bots/areyouheadless');
+      await this.page.waitForSelector('#res');
+      await this.page.screenshot({path: 'test_evasion_antoinevastel.png', fullPage: false});
+      await this.page.waitFor(500);
+      this.logger.info('Saved test_evasion_antoinevastel.png');
 
-        await this.page.goto('https://arh.antoinevastel.com/bots/areyouheadless');
-        await this.page.waitForSelector('#res');
-        await this.page.screenshot({path: 'test_evasion1.png', fullPage: false});
-        await this.page.waitFor(500);
+      await this.page.goto('https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html');
+      await this.page.waitForSelector('table .result');
+      await this.page.screenshot({path: 'test_evasion_intoli.png', fullPage: false});
+      await this.page.waitFor(500);
+      this.logger.info('Saved test_evasion_intoli.png');
 
-        await this.page.goto('https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html');
-        await this.page.waitForSelector('table .result');
-        await this.page.screenshot({path: 'test_evasion2.png', fullPage: false});
-        await this.page.waitFor(500);
-
-        await this.page.goto('https://bot.sannysoft.com');
-        await this.page.waitFor(5000);
-        await this.page.screenshot({path: 'test_evasion3.png', fullPage: true});
-      }
-
-      if (this.config.test_webrtc_leak) {
-        const webrtc_test_pages = ['https://www.expressvpn.com/webrtc-leak-test', 'https://browserleaks.com/webrtc'];
-
-        for (let url of webrtc_test_pages) {
-          await this.page.goto(url);
-          await this.page.waitFor(10000);
-          await this.page.screenshot({
-            path: `webrtc_leak_${Date.now()}.jpg`,
-            fullPage: false
-          });
-        }
-      }
+      await this.page.goto('https://bot.sannysoft.com');
+      await this.page.waitFor(5000);
+      await this.page.screenshot({path: 'test_evasion_sannysoft.png', fullPage: true});
+      this.logger.info('Saved test_evasion_sannysoft.png');
     }
 
+    if (this.config.test_webrtc_leak) {
+      const webrtc_test_pages = ['https://www.expressvpn.com/webrtc-leak-test', 'https://browserleaks.com/webrtc'];
+
+      for (let url of webrtc_test_pages) {
+        await this.page.goto(url);
+        await this.page.waitFor(10000);
+        await this.page.screenshot({
+          path: `webrtc_leak_${Date.now()}.jpg`,
+          fullPage: false
+        });
+      }
+    }
   }
 
   /**
@@ -466,7 +466,7 @@ export class BrowserWorker extends BaseWorker {
         puppeteer.use(ua);
       } else {
         // Add stealth plugin and use defaults (all tricks to hide puppeteer usage)
-        this.logger.verbose('Using full StealthPlugin for puppeteer');
+        this.logger.info('Using full StealthPlugin() with puppeteer');
         puppeteer.use(StealthPlugin());
       }
     }

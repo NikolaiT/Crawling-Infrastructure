@@ -74,7 +74,8 @@ export class PersistantCrawlHandler {
      'loglevel', 'options', 'worker_metadata', 'cookies',
       'default_accept_language', 'random_accept_language', 'block_webrtc',
        'headers', 'user_agent', 'default_navigation_timeout',
-        'intercept_types', 'recaptcha_provider', 'timezone', 'language'];
+        'intercept_types', 'recaptcha_provider', 'timezone', 'language',
+         'test_evasion', 'test_webrtc_leak'];
     for (let key of update_keys) {
       if (body[key]) {
         // @ts-ignore
@@ -109,6 +110,7 @@ export class PersistantCrawlHandler {
       render: 'new_render.js',
       google: 'new_google_scraper.js',
       bing: 'new_bing_scraper.js',
+      raw: 'new_render_raw.js',
     }
 
     if (!Object.keys(crawlers).includes(crawler_name)) {
@@ -149,6 +151,12 @@ export class PersistantCrawlHandler {
     if (this.http_worker === null || this.browser_worker === null) {
       return result;
     }
+
+    // assign the possibly updated config
+    // @ts-ignore
+    this.browser_worker.config = this.config;
+    this.http_worker.config = this.config;
+    this.logger.debug('Using config: ' + JSON.stringify(this.config));
 
     let items = body.items || [];
     // reload the browser page and close the current one

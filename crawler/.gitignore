@@ -1,3 +1,6 @@
+env/*
+env/crawler_server.env
+
 env/crawler.env
 env/testing.env
 

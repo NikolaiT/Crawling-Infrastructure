@@ -47,24 +47,39 @@ let payload = {
   items: ['https://ipinfo.io/json'],
   function_code: getFunc('new_render.js'),
   API_KEY: process.env.API_KEY,
-  crawler: 'render'
+  crawler: 'render',
+  loglevel: 'verbose',
+  test_evasion: true,
+};
+
+let payload4 = {
+  items: ['file:///home/nikolai/projects/work/crawling_infrastructure/crawler/experiments/fingerprint/index.html'],
+  crawler: 'raw',
+  API_KEY: process.env.API_KEY,
+  loglevel: 'verbose',
+  test_evasion: false,
+  user_agent: 'silly'
 };
 
 let payload2 = {
   items: ['What is my IP address?'],
   function_code: getFunc('new_google_scraper.js'),
   API_KEY: process.env.API_KEY,
-  crawler: 'google'
+  crawler: 'google',
+  loglevel: 'verbose',
+  test_evasion: true,
 };
 
 let payload3 = {
   items: ['no space no hope'],
   function_code: getFunc('new_bing_scraper.js'),
   API_KEY: process.env.API_KEY,
-  crawler: 'bing'
+  crawler: 'bing',
   //proxy: 'http://167.99.241.135:3128',
+  loglevel: 'verbose',
+  test_evasion: true,
 };
 
 (async () => {
-  console.dir(await call(payload2), {depth: null, colors: true});
+  console.dir(await call(payload4), {depth: null, colors: true});
 })();

@@ -134,6 +134,7 @@ export interface BrowserWorkerConfig extends HttpWorkerConfig {
   // whether the module https://www.npmjs.com/package/puppeteer-extra-plugin-stealth should be used
   // to hide the headless chromium browser
   apply_evasion: boolean;
+  // test whether bot evasion is good boy
   test_evasion: boolean;
   // Path to a User Data Directory: https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
   user_data_dir: string;
