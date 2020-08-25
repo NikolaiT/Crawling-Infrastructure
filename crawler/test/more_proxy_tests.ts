@@ -152,14 +152,15 @@ describe('language changes on subsequent crawls', async () => {
   });
 });
 
-describe('fingerprintjs2', async () => {
+describe('verify that hasLied properites are false with fingerprintjs2', async () => {
   it('has lied properties are all set to false', async () => {
     let payload = {
       items: ['file:///crawler/test/fingerprint/index2.html'],
-      random_user_agent: true,
       crawler: 'fp',
       API_KEY: process.env.API_KEY,
       loglevel: 'verbose',
+      block_webrtc: true,
+      apply_evasion: true,
     };
     let response = await endpoint(payload, 'blankSlate', 'POST');
     console.log(response)

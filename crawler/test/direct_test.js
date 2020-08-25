@@ -58,7 +58,7 @@ let payload4 = {
   loglevel: 'verbose',
   block_webrtc: true,
   apply_evasion: true,
-  test_evasion: true,
+  test_evasion: false,
 };
 
 let payload2 = {
