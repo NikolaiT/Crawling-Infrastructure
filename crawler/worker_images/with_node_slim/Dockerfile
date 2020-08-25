@@ -98,6 +98,7 @@ RUN echo "Node.js version:" \
  && echo "Google Chrome version:" \
  && $CHROME_EXECUTABLE --version \
  && echo "Npm Package versions:" \
- && node -p "require('./package.json').dependencies"
+ && node -p "require('./package.json').dependencies" \
+ && pwd
 
 CMD [ "/usr/local/bin/dumb-init",  "worker_images/with_node_slim/start_xvfb_and_run_cmd.sh" ]

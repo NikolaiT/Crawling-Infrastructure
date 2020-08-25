@@ -1,6 +1,6 @@
 {
   "name": "crawler",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Crawler is capable of scraping/crawling any website with a heavily customized puppeteer browser or via plain http requests using Got",
   "repository": {
     "type": "git",
@@ -48,6 +48,7 @@
     "module-alias": "^2.2.2",
     "mongoose": "^5.8.7",
     "proxy-chain": "^0.4.5",
+    "puppeteer-core": "^5.2.1",
     "puppeteer-extra": "^3.1.15",
     "puppeteer-extra-plugin-recaptcha": "^3.1.17",
     "puppeteer-extra-plugin-stealth": "^2.6.1",

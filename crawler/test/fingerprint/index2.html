@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <title>Fingerprintjs2 test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <pre id="fp"></pre>
+  <script src="fingerprint2.js"></script>
+  <script>
+    var fingerprintReport = function () {
+      Fingerprint2.get(function(components) {
+        var murmur = Fingerprint2.x64hash128(components.map(function (pair) { return pair.value }).join(), 31)
+        components.unshift({key: 'fingerprint', value: murmur});
+        document.querySelector("#fp").textContent = JSON.stringify(components, null, 2);
+      })
+    }
+    var cancelId
+    var cancelFunction
+    // see usage note in the README
+    if (window.requestIdleCallback) {
+      cancelId = requestIdleCallback(fingerprintReport)
+      cancelFunction = cancelIdleCallback
+    } else {
+      cancelId = setTimeout(fingerprintReport, 500)
+      cancelFunction = clearTimeout
+    }
+  </script>
+</body>
+</html>

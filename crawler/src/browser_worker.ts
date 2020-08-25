@@ -352,6 +352,7 @@ export class BrowserWorker extends BaseWorker {
 
     // pick a random desktop user agent
     if (this.config.random_user_agent) {
+      this.logger.verbose(`random_user_agent=true`);
       this.user_agent_obj = new this.UserAgent({deviceCategory: 'desktop'});
     }
 
@@ -451,7 +452,8 @@ export class BrowserWorker extends BaseWorker {
       // when we set a random user agent, the defaults are not correct anymore.
       // we need to update the platform accordingly
       if (this.user_agent_data) {
-        this.logger.verbose(`Using StealthPlugin with overriding platform: ${this.user_agent_data.platform}`);
+        // https://github.com/berstend/puppeteer-extra/blob/c44c8bb0224c6bba2554017bfb9d7a1d0119f92f/packages/puppeteer-extra-plugin-stealth/evasions/user-agent-override/readme.md
+        this.logger.info(`Using StealthPlugin with overriding platform: ${this.user_agent_data.platform}`);
         // Remove this specific stealth plugin from the default set
         stealth.enabledEvasions.delete("user-agent-override");
         puppeteer.use(stealth);
@@ -466,8 +468,11 @@ export class BrowserWorker extends BaseWorker {
         puppeteer.use(ua);
       } else {
         // Add stealth plugin and use defaults (all tricks to hide puppeteer usage)
-        this.logger.info('Using full StealthPlugin() with puppeteer');
-        puppeteer.use(StealthPlugin());
+        this.logger.info('Using StealthPlugin() without plugin user-agent-override() in puppeteer');
+        // Remove user-agent-override from the default set
+        // reason, we set the proper user-agent and platform ourselves
+        stealth.enabledEvasions.delete("user-agent-override");
+        puppeteer.use(stealth);
       }
     }
 
@@ -513,6 +518,9 @@ export class BrowserWorker extends BaseWorker {
     }
 
     let headless: boolean = true;
+    if (process.env.HEADLESS === 'false') {
+      headless = false;
+    }
 
     if (process.env.USING_XVFB === '1') {
       // when we are using XVFB frame buffer server, we start pptr with headless false
@@ -548,7 +556,7 @@ export class BrowserWorker extends BaseWorker {
       pptr_options.args.push(`--disable-extensions-except=./chrome_extensions/webrtc-blocker`);
       pptr_options.args.push(`--load-extension=./chrome_extensions/webrtc-blocker`);
 
-      this.logger.verbose(`Loading extension webrtc-blocker`);
+      this.logger.info(`Loading extension webrtc-blocker`);
     }
 
     if (process.env.PUPPETEER_EXECUTABLE_PATH) {

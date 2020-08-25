@@ -45,7 +45,6 @@ async function callRemote(payload) {
 
 let payload = {
   items: ['https://ipinfo.io/json'],
-  function_code: getFunc('new_render.js'),
   API_KEY: process.env.API_KEY,
   crawler: 'render',
   loglevel: 'verbose',
@@ -53,17 +52,17 @@ let payload = {
 };
 
 let payload4 = {
-  items: ['file:///home/nikolai/projects/work/crawling_infrastructure/crawler/experiments/fingerprint/index.html'],
-  crawler: 'raw',
+  items: ['file:///home/nikolai/projects/work/crawling_infrastructure/crawler/test/fingerprint/index2.html'],
+  crawler: 'fp',
   API_KEY: process.env.API_KEY,
   loglevel: 'verbose',
-  test_evasion: false,
-  user_agent: 'silly'
+  block_webrtc: true,
+  apply_evasion: true,
+  test_evasion: true,
 };
 
 let payload2 = {
   items: ['What is my IP address?'],
-  function_code: getFunc('new_google_scraper.js'),
   API_KEY: process.env.API_KEY,
   crawler: 'google',
   loglevel: 'verbose',
@@ -72,7 +71,6 @@ let payload2 = {
 
 let payload3 = {
   items: ['no space no hope'],
-  function_code: getFunc('new_bing_scraper.js'),
   API_KEY: process.env.API_KEY,
   crawler: 'bing',
   //proxy: 'http://167.99.241.135:3128',

@@ -19,8 +19,8 @@ export function startProxyServer(proxy_state: any) {
       let upstream_proxy = null;
       if (proxy_state.proxy) {
         upstream_proxy = proxy_state.proxy;
+        logger.info('Using upstream proxy: ' + upstream_proxy);
       }
-      logger.info('Using upstream proxy: ' + upstream_proxy);
       return {
         requestAuthentication: false,
         upstreamProxyUrl: upstream_proxy,
@@ -35,13 +35,13 @@ export function startProxyServer(proxy_state: any) {
   // Emitted when HTTP connection is closed
   server.on('connectionClosed', (params: any) => {
     var {connectionId, stats} = params;
-    logger.info(`Connection ${connectionId} closed`);
+    logger.verbose(`Connection ${connectionId} closed`);
   });
 
   // Emitted when HTTP request fails
   server.on('requestFailed', (params: any) => {
     var {request, error} = params;
-    logger.info(`Request ${request.url} failed`);
+    logger.error(`Request ${request.url} failed`);
     logger.error(error);
   });
 

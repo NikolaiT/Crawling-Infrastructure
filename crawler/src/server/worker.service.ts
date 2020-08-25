@@ -159,7 +159,7 @@ export class WorkerService {
 
     if (this.state === State.initial) {
       if (this.persistantCrawlHandler === null) {
-        this.persistantCrawlHandler = new PersistantCrawlHandler(req.body);
+        this.persistantCrawlHandler = new PersistantCrawlHandler();
       }
       this.state = State.running;
       await this.persistantCrawlHandler.run(req.body).then((response: any) => {

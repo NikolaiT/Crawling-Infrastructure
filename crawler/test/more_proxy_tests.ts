@@ -152,16 +152,23 @@ describe('language changes on subsequent crawls', async () => {
   });
 });
 
-describe('fingerprintjs', async () => {
-  it('', async () => {
+describe('fingerprintjs2', async () => {
+  it('has lied properties are all set to false', async () => {
     let payload = {
-      items: ['file:///crawler/test/fingerprint/index.html'],
-      crawler: 'raw',
+      items: ['file:///crawler/test/fingerprint/index2.html'],
+      random_user_agent: true,
+      crawler: 'fp',
       API_KEY: process.env.API_KEY,
       loglevel: 'verbose',
     };
     let response = await endpoint(payload, 'blankSlate', 'POST');
-    console.log(response);
+    console.log(response)
+    let fp = response[0];
+    for (let el of fp) {
+      if (el.key.startsWith('hasLied')) {
+        expect(el.value).to.equal(false, 'key: ' + el.key + ' is true');
+      }
+    }
   });
 });
 

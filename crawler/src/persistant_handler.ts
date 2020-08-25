@@ -11,6 +11,7 @@ import { HttpWorker} from './http_worker';
 import { startProxyServer } from './proxy_server';
 import {puppeteer_proxy_error_needles, http_codes_proxy_failure} from './handler';
 import {ResultPolicy, ExecutionEnv} from '@lib/types/common';
+import {LogLevel} from "@lib/misc/logger";
 const got = require('got');
 
 export enum State {
@@ -30,12 +31,12 @@ export class PersistantCrawlHandler {
   counter: number;
   crawler_cache: any;
 
-  constructor(config: HttpWorkerConfig | BrowserWorkerConfig) {
-    this.logger = getLogger(null, 'persistantHandler', config.loglevel);
+  constructor() {
+    this.logger = getLogger(null, 'persistantHandler', LogLevel.verbose);
     this.state = State.initial;
     this.http_worker = null;
     this.browser_worker = null;
-    let config_handler = new CrawlConfig(config);
+    let config_handler = new CrawlConfig({} as BrowserWorkerConfig);
     this.config = config_handler.getDefaultConfig();
     this.proxy_state = {
       proxy: null
@@ -48,19 +49,6 @@ export class PersistantCrawlHandler {
   public async setup() {
     if (this.state === State.initial) {
       this.proxy_server = startProxyServer(this.proxy_state);
-
-      this.config.worker_id = 1;
-      // @ts-ignore
-      this.config.result_policy = ResultPolicy.return;
-      // @ts-ignore
-      this.config.random_user_agent = false;
-      // @ts-ignore
-      this.config.apply_evasion = true;
-      // @ts-ignore
-      this.config.block_webrtc = true;
-      // @ts-ignore
-      this.config.pup_args = [`--proxy-server=http://localhost:8000`];
-
       this.http_worker = new HttpWorker(this.config);
       this.browser_worker = new BrowserWorker(this.config as BrowserWorkerConfig);
       await this.http_worker.setup();
@@ -70,14 +58,28 @@ export class PersistantCrawlHandler {
   }
 
   private updateConfig(body: any) {
+    // set default config options
+    this.config.worker_id = 1;
+    // @ts-ignore
+    this.config.result_policy = ResultPolicy.return;
+    // @ts-ignore
+    this.config.apply_evasion = true;
+    // @ts-ignore
+    this.config.block_webrtc = true;
+    // @ts-ignore
+    this.config.pup_args = [`--proxy-server=http://localhost:8000`];
+
     let update_keys: Array<string> = ['function_code', 'items',
      'loglevel', 'options', 'worker_metadata', 'cookies',
-      'default_accept_language', 'random_accept_language', 'block_webrtc',
+      'default_accept_language', 'random_accept_language',
        'headers', 'user_agent', 'default_navigation_timeout',
         'intercept_types', 'recaptcha_provider', 'timezone', 'language',
-         'test_evasion', 'test_webrtc_leak'];
+         'test_evasion', 'test_webrtc_leak', 'random_user_agent', 'user_agent_options',
+       'apply_evasion', 'block_webrtc'];
+
     for (let key of update_keys) {
-      if (body[key]) {
+      if (body[key] !== undefined) {
+        this.logger.info(`${key}=${body[key]}`);
         // @ts-ignore
         this.config[key] = body[key];
       }
@@ -111,6 +113,7 @@ export class PersistantCrawlHandler {
       google: 'new_google_scraper.js',
       bing: 'new_bing_scraper.js',
       raw: 'new_render_raw.js',
+      fp: 'new_fp.js',
     }
 
     if (!Object.keys(crawlers).includes(crawler_name)) {
@@ -144,6 +147,7 @@ export class PersistantCrawlHandler {
    * are not required during startup of the browser.
    */
   public async run(body: any) {
+    this.logger.info('Using body: ' + JSON.stringify(body, null, 1));
     await this.updateConfig(body);
     await this.setup();
     const result: any = [];
@@ -156,7 +160,7 @@ export class PersistantCrawlHandler {
     // @ts-ignore
     this.browser_worker.config = this.config;
     this.http_worker.config = this.config;
-    this.logger.debug('Using config: ' + JSON.stringify(this.config));
+    this.logger.info('Using config: ' + JSON.stringify(this.config, null, 1));
 
     let items = body.items || [];
     // reload the browser page and close the current one
