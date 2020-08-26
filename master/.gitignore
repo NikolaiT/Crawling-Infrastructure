@@ -2,6 +2,8 @@ node_modules
 package-lock.json
 dist
 
+env/crawler.env
+env/http_crawler.env
 env/development.env
 env/production.env
 env/client/

@@ -1,6 +1,8 @@
+env/
 env/*
 env/crawler_server.env
 env/docker_crawler_server.env
+env/crawler_server.env
 
 env/crawler.env
 env/testing.env

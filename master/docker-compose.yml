@@ -83,9 +83,7 @@ services:
       - "3333:3333"
     expose:
       - "3333:3333"
-    environment:
-      - HOST=0.0.0.0
-      - USING_XVFB=1
+    env_file: env/crawler.env
     deploy:
       replicas: 5
       placement:
@@ -115,10 +113,7 @@ services:
       - "4444:4444"
     expose:
       - "4444:4444"
-    environment:
-      - HOST=0.0.0.0
-      - PORT=4444
-      - USING_XVFB=0
+    env_file: env/http_crawler.env
     deploy:
       replicas: 5
       placement:
