@@ -34,11 +34,15 @@ function initEnv() {
       logger.error('env path does not exist: ' + path);
       process.exit(1);
     } else {
+      logger.info('Loading env from path: ' + path);
       dotenv.config({ path: path });
     }
   }
 
-  const required: Array<string> = ['API_KEY', 'API_URL', 'CHROME_VERSION', 'PUPPETEER_EXECUTABLE_PATH', 'EXECUTION_ENV'];
+  const required: Array<string> = ['API_KEY', 'API_URL',
+   'CHROME_VERSION', 'PUPPETEER_EXECUTABLE_PATH',
+    'EXECUTION_ENV', 'AWS_ACCESS_KEY', 'USING_XVFB',
+     'AWS_SECRET_KEY', 'AWS_REGION', 'AWS_BUCKET', 'HEADLESS'];
 
   for (let key of required) {
     if (process.env[key] === undefined) {

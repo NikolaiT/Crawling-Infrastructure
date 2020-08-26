@@ -69,6 +69,10 @@ export class PersistantCrawlHandler {
     // @ts-ignore
     this.config.block_webrtc = true;
     // @ts-ignore
+    this.config.default_navigation_timeout = 30000;
+    // @ts-ignore
+    this.config.request_timeout = 15000;
+    // @ts-ignore
     this.config.pup_args = [`--proxy-server=http://localhost:8000`];
 
     let update_keys: Array<string> = ['function_code', 'items',
@@ -250,9 +254,11 @@ export class PersistantCrawlHandler {
           let t1 = new Date();
           let elapsed = t1.valueOf() - t0.valueOf();
           this.logger.verbose(`[${i}] Successfully crawled item ${item} in ${elapsed}ms`);
-          this.storeResults(search_metadata.id, result).then((uploaded) => {
-            this.logger.info(`[${i}] Done uploading results to s3...`);
-          });
+          if (body.crawler.toLowerCase() === 'google' || body.crawler.toLowerCase() === 'bing') {
+            this.storeResults(search_metadata.id, result).then((uploaded) => {
+              this.logger.info(`[${i}] Done uploading results to s3...`);
+            });
+          }
         } catch (Error) {
           this.logger.error(`[${i}] Failed to crawl item ${item} with error: ${Error.message}`);
           let err_message = Error.toString();

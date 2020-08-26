@@ -62,9 +62,10 @@ let payload4 = {
 };
 
 let payload2 = {
-  items: ['How to swim?'],
+  items: ['what is my IP address?'],
   API_KEY: process.env.API_KEY,
   crawler: 'google',
+  proxy: 'http://167.99.241.135:3128',
 };
 
 let payload3 = {

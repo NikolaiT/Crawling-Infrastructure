@@ -8,8 +8,30 @@ import {launchTestServer} from './test_server';
 import 'mocha';
 
 before(beforeTest);
-
 let test_server = launchTestServer();
+
+function checkMetadata(metadata: any) {
+  expect(metadata.id).to.be.an('string').that.is.not.empty;
+  expect(metadata.status).to.equal('Success');
+  expect(metadata.json_endpoint).to.be.an('string').that.is.not.empty;
+  expect(metadata.created_at).to.be.an('string').that.is.not.empty;
+  expect(metadata.processed_at).to.be.an('string').that.is.not.empty;
+  expect(metadata.raw_html_file).to.be.an('string').that.is.not.empty;
+  expect(metadata.total_time_taken).to.be.an('number').that.is.above(0);
+}
+
+function checkGoogleResults(response: any) {
+  for (let item of response.results) {
+    for (let page of item) {
+      expect(page.results).to.be.an('array').to.have.length.within(6, 11);
+      expect(page.search_information.organic_results_state).to.be.an('string').that.is.not.empty;
+      expect(page.search_information.total_results).to.be.an('string').that.is.not.empty;
+      expect(page.search_information.time_taken_displayed).to.be.an('string').that.is.not.empty;
+      expect(page.search_information.query_displayed).to.be.an('string').that.is.not.empty;
+      expect(page.search_information.page_num).to.be.an('number').that.is.above(0);
+    }
+  }
+}
 
 let proxies = [
   {url: 'http://167.99.241.135:3128', ip: '167.99.241.135'},
@@ -29,18 +51,11 @@ let proxies = [
          items: [kw],
          crawler: 'google',
          API_KEY: process.env.API_KEY,
-         loglevel: 'info',
        };
        let response = await endpoint(payload, 'blankSlate', 'POST');
-       //console.dir(response);
-       for (let obj of response) {
-         for (let res of obj) {
-           expect(res.results).to.be.an('array').to.have.length.within(3, 11);
-           expect(res.num_results).to.be.an('string').that.is.not.empty;
-           expect(res.no_results).to.equal(false);
-           expect(res.page_num).to.be.an('number').that.is.above(0);
-         }
-       }
+       console.dir(response.search_metadata);
+       checkMetadata(response.search_metadata);
+       checkGoogleResults(response);
        stop = new Date();
        measurements.push(stop.valueOf()-start.valueOf());
      }
@@ -62,7 +77,8 @@ describe('changing proxies works while browser keeps alive', async () => {
         loglevel: 'info',
       };
       let response = await endpoint(payload, 'blankSlate', 'POST');
-      let ipinfo = JSON.parse(response);
+      checkMetadata(response.search_metadata);
+      let ipinfo = JSON.parse(response.results);
       console.log(ipinfo);
 
       if (proxy.ip) {
@@ -87,15 +103,13 @@ describe('crawling google works with proxies', async () => {
         loglevel: 'info',
       };
       let response = await endpoint(payload, 'blankSlate', 'POST');
-      //console.dir(response);
-      for (let obj of response) {
-        for (let res of obj) {
-          expect(res.miniapps).to.be.an('string').to.contain(proxy.ip);
+      checkMetadata(response.search_metadata);
+      checkGoogleResults(response);
+      console.dir(response.search_metadata);
+      for (let obj of response.results) {
+        for (let page of obj) {
+          expect(page.miniapps).to.be.an('string').to.contain(proxy.ip);
           console.log(proxy.ip + ' appears in miniapps');
-          expect(res.results).to.be.an('array').to.have.length.within(3, 11);
-          expect(res.num_results).to.be.an('string').that.is.not.empty;
-          expect(res.no_results).to.equal(false);
-          expect(res.page_num).to.be.an('number').that.is.above(0);
         }
       }
     }
@@ -113,7 +127,8 @@ describe('user agent changes on subsequent crawls', async () => {
       user_agent: ua
     };
     let response = await endpoint(payload, 'blankSlate', 'POST');
-    let headers = JSON.parse(response);
+    checkMetadata(response.search_metadata);
+    let headers = JSON.parse(response.results);
     expect(headers['user-agent']).to.equal(ua);
     //console.log(headers);
   });
@@ -134,7 +149,8 @@ describe('custom headers can be set', async () => {
       headers: custom_headers
     };
     let response = await endpoint(payload, 'blankSlate', 'POST');
-    let headers = JSON.parse(response);
+    checkMetadata(response.search_metadata);
+    let headers = JSON.parse(response.results);
     console.log(headers);
     expect(headers['cookie']).to.equal(custom_headers['cookie']);
     //expect(headers["accept-language"]).to.equal(custom_headers["accept-language"]);
@@ -163,8 +179,9 @@ describe('verify that hasLied properites are false with fingerprintjs2', async (
       apply_evasion: true,
     };
     let response = await endpoint(payload, 'blankSlate', 'POST');
-    console.log(response)
-    let fp = response[0];
+    checkMetadata(response.search_metadata);
+    let fp = response.results[0];
+    console.log(fp);
     for (let el of fp) {
       if (el.key.startsWith('hasLied')) {
         expect(el.value).to.equal(false, 'key: ' + el.key + ' is true');

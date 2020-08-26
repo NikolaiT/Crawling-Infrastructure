@@ -13,5 +13,5 @@ then
 fi
 
 echo "[DOCKER] Starting worker server"
-node dist/crawler/src/server/server.js
+node dist/crawler/src/server/server.js /crawler/env/docker_crawler_server.env
 exit 0
