@@ -6,6 +6,7 @@ import {WorkerStatus} from './worker';
 import {CrawlConfig} from './config';
 import {PageError} from './browser_worker';
 import {VersionInfo} from '@lib/types/common';
+import {S3Controller} from '@lib/storage/storage';
 import { BrowserWorker } from './browser_worker';
 import { HttpWorker} from './http_worker';
 import { startProxyServer } from './proxy_server';
@@ -13,6 +14,7 @@ import {puppeteer_proxy_error_needles, http_codes_proxy_failure} from './handler
 import {ResultPolicy, ExecutionEnv} from '@lib/types/common';
 import {LogLevel} from "@lib/misc/logger";
 const got = require('got');
+const md5 = require('md5');
 
 export enum State {
   initial = 'initial',
@@ -142,18 +144,54 @@ export class PersistantCrawlHandler {
     }
   }
 
+  private getId(body: any, created_at: string) {
+    let str_data = JSON.stringify(body.items) + body.crawler + created_at;
+    return md5(str_data);
+  }
+
+  // store html and json results
+  // on s3
+  // @todo: currently we only store the first page
+  // @todo: fix that
+  private async storeResults(id: string, results: any) {
+    let controller = new S3Controller(this.config.aws_config);
+    let bytes_uploaded = 0;
+    let html = results[0].html.repeat(1);
+    delete results[0].html;
+    // first upload the html
+    let html_fname = id + '.html';
+    bytes_uploaded = await controller.upload(html_fname, html, false, 'text/html; charset=utf-8');
+    this.logger.info(`Uploaded ${bytes_uploaded} bytes to ${html_fname}`);
+    // then upload the json
+    let json_fname = id + '.json';
+    bytes_uploaded = await controller.upload(json_fname, JSON.stringify(results[0], null, 2), false);
+    this.logger.info(`Uploaded ${bytes_uploaded} bytes to ${json_fname}`);
+  }
+
   /**
    * Each run() function call can update some config properties that
    * are not required during startup of the browser.
    */
   public async run(body: any) {
+    let search_metadata: any = {
+      id: '',
+      status: "Success",
+      json_endpoint: '',
+      created_at: new Date(),
+      processed_at: '',
+      raw_html_file: '',
+      total_time_taken: 0,
+    };
+    search_metadata.id = this.getId(body, search_metadata.created_at);
+    search_metadata.json_endpoint = `https://crawling-searches.s3-us-west-1.amazonaws.com/${search_metadata.id}.json`;
+    search_metadata.raw_html_file = `https://crawling-searches.s3-us-west-1.amazonaws.com/${search_metadata.id}.html`;
     this.logger.info('Using body: ' + JSON.stringify(body, null, 1));
     await this.updateConfig(body);
     await this.setup();
-    const result: any = [];
+    const results: any = [];
 
     if (this.http_worker === null || this.browser_worker === null) {
-      return result;
+      return results;
     }
 
     // assign the possibly updated config
@@ -206,10 +244,15 @@ export class PersistantCrawlHandler {
         }
         try {
           let t0 = new Date();
-          result.push(await worker.crawl(item));
+          search_metadata.processed_at = new Date();
+          let result = await worker.crawl(item);
+          results.push(result);
           let t1 = new Date();
           let elapsed = t1.valueOf() - t0.valueOf();
           this.logger.verbose(`[${i}] Successfully crawled item ${item} in ${elapsed}ms`);
+          this.storeResults(search_metadata.id, result).then((uploaded) => {
+            this.logger.info(`[${i}] Done uploading results to s3...`);
+          });
         } catch (Error) {
           this.logger.error(`[${i}] Failed to crawl item ${item} with error: ${Error.message}`);
           let err_message = Error.toString();
@@ -220,18 +263,24 @@ export class PersistantCrawlHandler {
               block_detected = true;
             }
           }
-          result.push({
+          results.push({
             'error_message': Error.toString(),
             'error_trace': Error.stack,
           });
         }
       }
     } catch (error) {
+      search_metadata.status = 'Failed';
       this.logger.error(error.stack);
     } finally {
       await this.restartProxyServer();
       this.counter++;
+      search_metadata.total_time_taken = ((new Date()).valueOf() - search_metadata.created_at) / 1000;
     }
-    return result;
+
+    return {
+      search_metadata: search_metadata,
+      results: results,
+    }
   }
 }

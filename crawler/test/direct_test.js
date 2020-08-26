@@ -62,11 +62,9 @@ let payload4 = {
 };
 
 let payload2 = {
-  items: ['What is my IP address?'],
+  items: ['How to swim?'],
   API_KEY: process.env.API_KEY,
   crawler: 'google',
-  loglevel: 'verbose',
-  test_evasion: true,
 };
 
 let payload3 = {
@@ -79,5 +77,5 @@ let payload3 = {
 };
 
 (async () => {
-  console.dir(await call(payload4), {depth: null, colors: true});
+  console.dir(await call(payload2), {depth: null, colors: true});
 })();

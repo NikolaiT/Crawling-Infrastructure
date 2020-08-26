@@ -63,14 +63,14 @@ export class S3Controller {
    *
    * @return: if the value was successfully uploaded, return the length of the blob uploaded
    */
-  public async upload(key: string, value: string | Buffer, compress: boolean = false) {
+  public async upload(key: string, value: string | Buffer, compress: boolean = false, content_type = 'application/json; charset=utf-8') {
     let buffer_length: number = value.length;
 
     const request: AWS.S3.Types.PutObjectRequest = {
       Bucket: this.bucket,
       Key: key,
       Body: value,
-      ContentType: 'application/json; charset=utf-8',
+      ContentType: content_type,
     };
 
     if (value instanceof Buffer || typeof value === 'object') {

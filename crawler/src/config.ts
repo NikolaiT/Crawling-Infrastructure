@@ -225,6 +225,15 @@ export class CrawlConfig {
       this.config.worker_metadata = false;
     }
 
+    if (this.config.aws_config === undefined) {
+      this.config.aws_config = {
+        AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY,
+        AWS_SECRET_KEY: process.env.AWS_SECRET_KEY,
+        AWS_REGION: process.env.AWS_REGION,
+        AWS_BUCKET: process.env.AWS_BUCKET,
+      } as IAWSConfig;
+    }
+
     // set execution_env from environment variable EXECUTION_ENV
     if (Object.values(ExecutionEnv).includes(process.env.EXECUTION_ENV as ExecutionEnv)) {
       this.config.execution_env = process.env.EXECUTION_ENV as ExecutionEnv;
