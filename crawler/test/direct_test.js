@@ -2,7 +2,7 @@
 const got = require("got");
 const fs = require("fs");
 const path = require("path");
-require('dotenv').config({ path: '../env/testing.env' });
+require('dotenv').config({ path: '../env/crawler_server.env' });
 
 function getFunc(scraper_type) {
   let base_path = '/home/nikolai/projects/work/cloudcrawler_functions/';
@@ -62,10 +62,9 @@ let payload4 = {
 };
 
 let payload2 = {
-  items: ['what is my IP address?'],
+  items: ['private krankenversicherung'],
   API_KEY: process.env.API_KEY,
   crawler: 'google',
-  proxy: 'http://167.99.241.135:3128',
 };
 
 let payload3 = {
