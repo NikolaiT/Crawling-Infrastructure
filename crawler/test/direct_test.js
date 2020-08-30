@@ -44,38 +44,19 @@ async function callRemote(payload) {
 }
 
 let payload = {
-  items: ['https://ipinfo.io/json'],
-  API_KEY: process.env.API_KEY,
-  crawler: 'render',
-  loglevel: 'verbose',
-  test_evasion: true,
-};
-
-let payload4 = {
-  items: ['file:///home/nikolai/projects/work/crawling_infrastructure/crawler/test/fingerprint/index2.html'],
-  crawler: 'fp',
-  API_KEY: process.env.API_KEY,
-  loglevel: 'verbose',
-  block_webrtc: true,
-  apply_evasion: true,
-  test_evasion: false,
-};
-
-let payload2 = {
-  items: ['private krankenversicherung'],
+  items: ['what is my ip address?'],
   API_KEY: process.env.API_KEY,
   crawler: 'google',
 };
 
 let payload3 = {
-  items: ['no space no hope'],
+  items: ['what is my ip address?'],
   API_KEY: process.env.API_KEY,
-  crawler: 'bing',
-  //proxy: 'http://167.99.241.135:3128',
-  loglevel: 'verbose',
-  test_evasion: true,
+  crawler: 'google',
+  proxy: 'http://139.59.136.53:3128',
 };
 
 (async () => {
-  console.dir(await call(payload2), {depth: null, colors: true});
+  console.dir(await call(payload3), {depth: null, colors: true});
+  console.dir(await call(payload3), {depth: null, colors: true});
 })();

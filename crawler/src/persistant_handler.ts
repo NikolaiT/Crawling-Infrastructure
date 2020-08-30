@@ -13,6 +13,7 @@ import { startProxyServer } from './proxy_server';
 import {puppeteer_proxy_error_needles, http_codes_proxy_failure} from './handler';
 import {ResultPolicy, ExecutionEnv} from '@lib/types/common';
 import {LogLevel} from "@lib/misc/logger";
+import _ from 'underscore';
 const got = require('got');
 const md5 = require('md5');
 
@@ -28,7 +29,6 @@ export class PersistantCrawlHandler {
   state: State;
   http_worker: HttpWorker | null;
   browser_worker: BrowserWorker | null;
-  proxy_state: any;
   proxy_server: any;
   counter: number;
   crawler_cache: any;
@@ -40,9 +40,6 @@ export class PersistantCrawlHandler {
     this.browser_worker = null;
     let config_handler = new CrawlConfig({} as BrowserWorkerConfig);
     this.config = config_handler.getDefaultConfig();
-    this.proxy_state = {
-      proxy: null
-    };
     this.proxy_server = null;
     this.counter = 0;
     this.crawler_cache = {};
@@ -50,7 +47,7 @@ export class PersistantCrawlHandler {
 
   public async setup() {
     if (this.state === State.initial) {
-      this.proxy_server = startProxyServer(this.proxy_state);
+      this.proxy_server = await startProxyServer();
       this.http_worker = new HttpWorker(this.config);
       this.browser_worker = new BrowserWorker(this.config as BrowserWorkerConfig);
       await this.http_worker.setup();
@@ -92,28 +89,35 @@ export class PersistantCrawlHandler {
     }
   }
 
-  private async closeProxyServer(proxy_server: any) {
-    return new Promise(function(resolve, reject) {
-      proxy_server.close(true, function() {
-        resolve('Proxy server was closed.');
-      });
-    });
-  }
-
   private async restartProxyServer() {
     // if an old proxy server is running, forcefully shut it down
     // and start a new one.
     // reason: all pending keep-alive connections should not be re-used
     // with a potentially different proxy server
-    await this.closeProxyServer(this.proxy_server).then((onClose) => {
-      this.proxy_server = startProxyServer(this.proxy_state);
-      this.logger.info('Restarted proxy server.');
+    let t0 = new Date();
+    await this.proxy_server.close(true);
+    this.proxy_server = await startProxyServer();
+    let t1 = new Date();
+    this.logger.info(`Restarted proxy server in ${(t1.valueOf() - t0.valueOf())}ms.`);
+  }
+
+  private async closeProxyConnections() {
+    let t0 = new Date();
+    let count = 0;
+    _.each(this.proxy_server.handlers, (handler: any) => {
+        count++;
+        handler.close();
     });
+    let t1 = new Date();
+    this.logger.info(`Closed ${count} proxy handlers in ${(t1.valueOf() - t0.valueOf())}ms.`);
   }
 
   // Get crawler code from github
   // cache the code for speed
-  private async getCrawlerCode(crawler_name: string) {
+  private async getCrawlerCode(body: any) {
+    let crawler_name = body.crawler;
+    let no_cache: boolean = (body.no_cache === true);
+
     let crawlers = {
       render: 'new_render.js',
       google: 'new_google_scraper.js',
@@ -126,7 +130,7 @@ export class PersistantCrawlHandler {
       return false;
     }
 
-    if (this.crawler_cache[crawler_name]) {
+    if (this.crawler_cache[crawler_name] && no_cache === false) {
       this.logger.info(`Using cache for crawler ${crawler_name}`);
       return this.crawler_cache[crawler_name];
     }
@@ -158,18 +162,22 @@ export class PersistantCrawlHandler {
   // @todo: currently we only store the first page
   // @todo: fix that
   private async storeResults(id: string, results: any) {
-    let controller = new S3Controller(this.config.aws_config);
-    let bytes_uploaded = 0;
-    let html = results[0].html.repeat(1);
-    delete results[0].html;
-    // first upload the html
-    let html_fname = id + '.html';
-    bytes_uploaded = await controller.upload(html_fname, html, false, 'text/html; charset=utf-8');
-    this.logger.info(`Uploaded ${bytes_uploaded} bytes to ${html_fname}`);
-    // then upload the json
-    let json_fname = id + '.json';
-    bytes_uploaded = await controller.upload(json_fname, JSON.stringify(results[0], null, 2), false);
-    this.logger.info(`Uploaded ${bytes_uploaded} bytes to ${json_fname}`);
+    try {
+      let controller = new S3Controller(this.config.aws_config);
+      let bytes_uploaded = 0;
+      let html = results[0].html.repeat(1);
+      delete results[0].html;
+      // first upload the html
+      let html_fname = id + '.html';
+      bytes_uploaded = await controller.upload(html_fname, html, false, 'text/html; charset=utf-8');
+      this.logger.info(`Uploaded ${bytes_uploaded} bytes to ${html_fname}`);
+      // then upload the json
+      let json_fname = id + '.json';
+      bytes_uploaded = await controller.upload(json_fname, JSON.stringify(results[0], null, 2), false);
+      this.logger.info(`Uploaded ${bytes_uploaded} bytes to ${json_fname}`);
+    } catch (error) {
+      this.logger.error(`Could not upload results to s3: ${error}`);
+    }
   }
 
   /**
@@ -211,16 +219,22 @@ export class PersistantCrawlHandler {
       await this.browser_worker.setupPage(body.user_agent || '');
     }
 
-    this.proxy_state.proxy = null;
     if (body.proxy) {
       this.logger.info('Using proxy: ' + body.proxy);
-      this.proxy_state.proxy = body.proxy;
+      this.proxy_server.prepareRequestFunction = function (params: any) {
+        var {request, username, password, hostname, port, isHttp, connectionId} = params;
+        console.log('Using upstream proxy: ' + body.proxy);
+        return {
+          requestAuthentication: false,
+          upstreamProxyUrl: body.proxy,
+        };
+      }
     }
 
     try {
       let worker = null;
       let WorkerClass = null;
-      let function_code = await this.getCrawlerCode(body.crawler);
+      let function_code = await this.getCrawlerCode(body);
       if (function_code === false) {
         return {
           error: 'invalid crawler propery. Allowed: crawler: google | bing | render',
@@ -260,6 +274,7 @@ export class PersistantCrawlHandler {
             });
           }
         } catch (Error) {
+          search_metadata.status = 'Failed';
           this.logger.error(`[${i}] Failed to crawl item ${item} with error: ${Error.message}`);
           let err_message = Error.toString();
           let block_detected: boolean = false;

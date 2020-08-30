@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 import {system} from '@lib/misc/shell';
 import {sleep} from '@lib/misc/helpers';
+import * as dotenv from "dotenv";
 
 export const metadata_keys = ['avg_items_per_second', 'num_items_crawled',
   'elapsed_crawling_ms', 'elapsed_ms', 'started', 'num_proxies_obtained', 'items',
@@ -35,7 +36,7 @@ export async function endpoint(body: any, endpoint: string, method='POST', api_u
     json: true // Automatically stringifies the body to JSON
   };
 
-  let url = api_url || process.env.API_URL;
+  let url = api_url || 'http://0.0.0.0:4444/';
 
   let full_url = url + endpoint;
 
@@ -54,6 +55,7 @@ export async function endpoint(body: any, endpoint: string, method='POST', api_u
     // dont print whole Got stack
     console.error(`Got request to ${full_url} failed with Error: ${error.message}`);
     console.error(error);
+    return error;
   }
 }
 
@@ -63,7 +65,7 @@ export function getFunc(scraper_type: string) {
 }
 
 export function checkEnv() {
-  const required = ['API_KEY', 'API_URL', 'AWS_ACCESS_KEY', 'AWS_SECRET_KEY', 'AWS_REGION', 'AWS_BUCKET'];
+  const required = ['API_KEY', 'API_URL'];
   for (let key of required) {
     if (!process.env[key]) {
       console.error(`Key ${key} required`);
@@ -106,6 +108,7 @@ export async function deleteTasks() {
 }
 
 export async function beforeTest(num_tasks: number = 0, env: Array<string> = []) {
+  dotenv.config({ path: 'env/docker_crawler_server.env' });
   checkEnv();
   // launch the worker docker instance if it is not running
   await turnDown();

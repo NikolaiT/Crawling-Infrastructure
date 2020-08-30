@@ -163,16 +163,21 @@ export class WorkerService {
       }
       this.state = State.running;
       await this.persistantCrawlHandler.run(req.body).then((response: any) => {
-        this.state = State.initial;
         this.exec_id = uuid_v1();
         response.id = this.exec_id;
         res.status(200).json(response);
+        this.state = State.initial;
       }).catch((err: any) => {
         this.state = State.failed;
         res.status(500).json({
           status: 500,
           error: err.toString()
         });
+      });
+    } else {
+      res.status(503).json({
+        status: 503,
+        error: 'Service Unavailable Error'
       });
     }
   }

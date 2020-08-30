@@ -23,7 +23,17 @@ function checkMetadata(metadata: any) {
 function checkGoogleResults(response: any) {
   for (let item of response.results) {
     for (let page of item) {
-      expect(page.results).to.be.an('array').to.have.length.within(6, 11);
+      console.log(`Searching "${page.search_information.query_displayed}" on page ${page.search_information.page_num}`);
+
+      expect(page.organic_results).to.be.an('array').to.have.length.within(6, 11);
+
+      expect(page.search_parameters.google_url).to.be.an('string').that.is.not.empty;
+      expect(page.search_parameters.engine).to.be.an('string').that.is.not.empty;
+      expect(page.search_parameters.q).to.be.an('string').that.is.not.empty;
+      expect(page.search_parameters.google_domain).to.be.an('string').that.is.not.empty;
+
+      expect(page.pagination).to.have.keys(['other_pages', 'next']);
+
       expect(page.search_information.organic_results_state).to.be.an('string').that.is.not.empty;
       expect(page.search_information.total_results).to.be.an('string').that.is.not.empty;
       expect(page.search_information.time_taken_displayed).to.be.an('string').that.is.not.empty;
@@ -36,13 +46,13 @@ function checkGoogleResults(response: any) {
 let proxies = [
   {url: 'http://167.99.241.135:3128', ip: '167.99.241.135'},
   {url: 'http://139.59.136.53:3128', ip: '139.59.136.53'},
-  {url: '', ip: ''},
+  {url: undefined, ip: undefined},
  ];
 
  describe('crawl response times should be significanly faster after the first crawl', async () => {
    it('crawls 5 keywords and the response time of the last 4 crawls should be quite fast', async () => {
      let measurements = [];
-     let keywords = ['politics news', 'weather today', 'founding a business', 'nothing around us', 'the last of us'];
+     let keywords = ['politics news', 'pizza lieferdienst', 'founding a business', 'nothing around us', 'the last of us'];
      let start = null;
      let stop = null;
      for (let kw of keywords) {
@@ -53,7 +63,7 @@ let proxies = [
          API_KEY: process.env.API_KEY,
        };
        let response = await endpoint(payload, 'blankSlate', 'POST');
-       console.dir(response.search_metadata);
+       console.log(response.search_metadata);
        checkMetadata(response.search_metadata);
        checkGoogleResults(response);
        stop = new Date();
@@ -92,23 +102,52 @@ describe('changing proxies works while browser keeps alive', async () => {
   });
 });
 
-describe('crawling google works with proxies', async () => {
-  it('should return proper google serp results when using proxies and google should show matching proxy', async () => {
+
+describe('alternative changing proxies', async () => {
+  it('changes IP address when changing the proxy with another ip info provider', async () => {
     for (let proxy of proxies) {
       let payload = {
-        items: ['what is my ip address?'],
-        crawler: 'google',
+        items: ['https://api.ipify.org/?format=json'],
+        crawler: 'render',
         API_KEY: process.env.API_KEY,
         proxy: proxy.url,
-        loglevel: 'info',
       };
       let response = await endpoint(payload, 'blankSlate', 'POST');
       checkMetadata(response.search_metadata);
+      let ipinfo = JSON.parse(response.results);
+      console.log(ipinfo);
+
+      if (proxy.ip) {
+        expect(ipinfo.ip).to.equal(proxy.ip);
+      } else {
+        // when not using proxy, the ip is smth else
+        expect(ipinfo.ip).to.not.equal(proxies[0].ip);
+        expect(ipinfo.ip).to.not.equal(proxies[1].ip);
+      }
+    }
+  });
+});
+
+
+describe('crawling google works with proxies', async () => {
+  it('should return proper google serp results when using proxies and google should show matching proxy', async () => {
+    for (let proxy of proxies) {
+      let payload: any = {
+        items: ['what is my ip address?'],
+        crawler: 'google',
+        API_KEY: process.env.API_KEY,
+      };
+      if (proxy.url) {
+        payload.proxy = proxy.url;
+      }
+      let response = await endpoint(payload, 'blankSlate', 'POST');
+      console.log(response.search_metadata);
+      console.log(response.results[0][0].miniapps);
+      checkMetadata(response.search_metadata);
       checkGoogleResults(response);
-      console.dir(response.search_metadata);
       for (let obj of response.results) {
         for (let page of obj) {
-          expect(page.miniapps).to.be.an('string').to.contain(proxy.ip);
+          //expect(page.miniapps).to.be.an('string').to.contain(proxy.ip);
           console.log(proxy.ip + ' appears in miniapps');
         }
       }
@@ -187,6 +226,27 @@ describe('verify that hasLied properites are false with fingerprintjs2', async (
         expect(el.value).to.equal(false, 'key: ' + el.key + ' is true');
       }
     }
+  });
+});
+
+describe('only one api call at the time allowed', async () => {
+  it('will fail when making parallel requests', async () => {
+    let payload = {
+      items: ['test'],
+      crawler: 'google',
+      API_KEY: process.env.API_KEY,
+    };
+    let responses = await Promise.all([endpoint(payload, 'blankSlate', 'POST'),
+     endpoint(payload, 'blankSlate', 'POST'), endpoint(payload, 'blankSlate', 'POST')]);
+    let first = responses[0];
+    let second = responses[1];
+    let third = responses[2];
+    expect(second.statusCode).to.equal(503);
+    expect(third.statusCode).to.equal(503);
+    expect(second.body.error).to.equal('Service Unavailable Error');
+    expect(third.body.error).to.equal('Service Unavailable Error');
+    expect(second.body.status).to.equal(503);
+    expect(third.body.status).to.equal(503);
   });
 });
 

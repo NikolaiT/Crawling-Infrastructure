@@ -1,7 +1,3 @@
-.env
-env/testing.env
-env/deploy.env
-
 node_modules
 .serverless/
 serverless.yml
