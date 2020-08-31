@@ -49,14 +49,34 @@ let payload = {
   crawler: 'google',
 };
 
+let payload2 = {
+  items: ["https://ipinfo.io/json"],
+  API_KEY: process.env.API_KEY,
+  crawler: 'render',
+  //proxy: "http://167.99.241.135:3128",
+  proxy: 'http://139.59.136.53:3128',
+};
+
 let payload3 = {
   items: ['what is my ip address?'],
   API_KEY: process.env.API_KEY,
   crawler: 'google',
   proxy: 'http://139.59.136.53:3128',
+  no_cache: true,
+};
+
+let payload4 = {
+  items: ['what is my ip address?'],
+  API_KEY: process.env.API_KEY,
+  crawler: 'google',
+  proxy: 'http://167.99.241.135:3128',
+  no_cache: true,
 };
 
 (async () => {
   console.dir(await call(payload3), {depth: null, colors: true});
+  console.dir(await call(payload4), {depth: null, colors: true});
+
   console.dir(await call(payload3), {depth: null, colors: true});
+  console.dir(await call(payload4), {depth: null, colors: true});
 })();

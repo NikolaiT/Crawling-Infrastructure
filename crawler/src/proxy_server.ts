@@ -3,7 +3,7 @@ import {Logger, getLogger, LogLevel} from '@lib/misc/logger';
 
 let logger = getLogger(null, 'ProxyServer', LogLevel.info);
 
-export async function startProxyServer() {
+export async function startProxyServer(proxy: string | null) {
   return new Promise(function(resolve, reject) {
     const server = new ProxyChain.Server({
       // Port where the server will listen. By default 8000.
@@ -18,7 +18,7 @@ export async function startProxyServer() {
         logger.verbose('headers: ' + JSON.stringify(request.headers));
         return {
           requestAuthentication: false,
-          upstreamProxyUrl: null,
+          upstreamProxyUrl: proxy,
         };
       },
     });

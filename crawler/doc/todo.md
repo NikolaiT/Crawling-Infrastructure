@@ -29,3 +29,11 @@ each api call having a own proxy.
 
 6) Detect google block way faster than via timeout [done]
 detect that google shows recaptcha [done]
+
+7) Why does proxy not work with google?
+
+the function is not overwritten, thats way
+
+when we set the proxy as static, it works well.
+
+when restarting the proxy server, it never worked

@@ -45,9 +45,9 @@ export class PersistantCrawlHandler {
     this.crawler_cache = {};
   }
 
-  public async setup() {
+  public async setup(body: any) {
     if (this.state === State.initial) {
-      this.proxy_server = await startProxyServer();
+      this.proxy_server = await startProxyServer(body.proxy || null);
       this.http_worker = new HttpWorker(this.config);
       this.browser_worker = new BrowserWorker(this.config as BrowserWorkerConfig);
       await this.http_worker.setup();
@@ -96,7 +96,7 @@ export class PersistantCrawlHandler {
     // with a potentially different proxy server
     let t0 = new Date();
     await this.proxy_server.close(true);
-    this.proxy_server = await startProxyServer();
+    this.proxy_server = await startProxyServer(null);
     let t1 = new Date();
     this.logger.info(`Restarted proxy server in ${(t1.valueOf() - t0.valueOf())}ms.`);
   }
@@ -199,7 +199,7 @@ export class PersistantCrawlHandler {
     search_metadata.raw_html_file = `https://crawling-searches.s3-us-west-1.amazonaws.com/${search_metadata.id}.html`;
     this.logger.info('Using body: ' + JSON.stringify(body, null, 1));
     await this.updateConfig(body);
-    await this.setup();
+    await this.setup(body);
     const results: any = [];
 
     if (this.http_worker === null || this.browser_worker === null) {
@@ -294,7 +294,7 @@ export class PersistantCrawlHandler {
       search_metadata.status = 'Failed';
       this.logger.error(error.stack);
     } finally {
-      await this.restartProxyServer();
+      await this.closeProxyConnections();
       this.counter++;
       search_metadata.total_time_taken = ((new Date()).valueOf() - search_metadata.created_at) / 1000;
     }
