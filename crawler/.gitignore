@@ -29,3 +29,7 @@ experiments/
 
 workers/*
 experiments/*
+
+# Dependency directory
+node_modules
+bower_components

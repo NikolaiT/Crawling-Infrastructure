@@ -5,7 +5,6 @@ FROM zenika/alpine-chrome:with-node
 # Application parameters and variables
 ENV HOST=0.0.0.0
 ENV PORT=3333
-ENV API_KEY=kfTP6E7GgDTtIBZnUQq4skrHGWcuPe1Z
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD 1
 ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/chromium-browser
 
