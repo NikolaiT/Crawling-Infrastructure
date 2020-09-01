@@ -147,13 +147,62 @@ describe('crawling google works with proxies', async () => {
       checkGoogleResults(response);
       for (let obj of response.results) {
         for (let page of obj) {
-          //expect(page.miniapps).to.be.an('string').to.contain(proxy.ip);
+          expect(page.miniapps).to.be.an('string').to.contain(proxy.ip);
           console.log(proxy.ip + ' appears in miniapps');
         }
       }
     }
   });
 });
+
+
+describe('switching proxies multiple times with google works', async () => {
+  it('changing proxies multiple times in a row works properly', async () => {
+    let repeated = [
+      {url: 'http://167.99.241.135:3128', ip: '167.99.241.135'},
+      {url: 'http://139.59.136.53:3128', ip: '139.59.136.53'},
+      {url: null, ip: null},
+      {url: 'http://167.99.241.135:3128', ip: '167.99.241.135'},
+      {url: 'http://139.59.136.53:3128', ip: '139.59.136.53'},
+      {url: null, ip: null},
+    ];
+    for (let proxy of repeated) {
+      let payload: any = {
+        items: ['what is my ip address?'],
+        crawler: 'google',
+        API_KEY: process.env.API_KEY,
+      };
+      if (proxy.url) {
+        payload.proxy = proxy.url;
+      }
+      let response = await endpoint(payload, 'blankSlate', 'POST');
+      console.log(response.search_metadata);
+      checkMetadata(response.search_metadata);
+
+      // check if google blocked the request and
+      // get the ip address this way
+      if (response.results[0][0].status && response.results[0][0].blocked_ip) {
+        console.log('blocked_ip: ' + response.results[0][0].blocked_ip);
+        expect(response.results[0][0].blocked_ip).to.equal(proxy.ip);
+      } else {
+        for (let obj of response.results) {
+          for (let page of obj) {
+            console.log('miniapps: ' + page.miniapps);
+            if (!proxy.url) {
+              console.log('negative test, confirming that no proxy IP appears in miniapps');
+              expect(page.miniapps).to.be.an('string').to.not.contain(repeated[0].ip);
+              expect(page.miniapps).to.be.an('string').to.not.contain(repeated[1].ip);
+            } else {
+              console.log('positive test, confirming that proxy IP appears in miniapps');
+              expect(page.miniapps).to.be.an('string').to.contain(proxy.ip);
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
 
 describe('user agent changes on subsequent crawls', async () => {
   it('user agent can be changed', async () => {

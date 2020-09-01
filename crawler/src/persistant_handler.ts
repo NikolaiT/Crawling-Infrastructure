@@ -47,7 +47,6 @@ export class PersistantCrawlHandler {
 
   public async setup(body: any) {
     if (this.state === State.initial) {
-      this.proxy_server = await startProxyServer(body.proxy || null);
       this.http_worker = new HttpWorker(this.config);
       this.browser_worker = new BrowserWorker(this.config as BrowserWorkerConfig);
       await this.http_worker.setup();
@@ -89,14 +88,16 @@ export class PersistantCrawlHandler {
     }
   }
 
-  private async restartProxyServer() {
+  private async restartProxyServer(proxy: string | null) {
     // if an old proxy server is running, forcefully shut it down
     // and start a new one.
     // reason: all pending keep-alive connections should not be re-used
     // with a potentially different proxy server
     let t0 = new Date();
-    await this.proxy_server.close(true);
-    this.proxy_server = await startProxyServer(null);
+    if (this.proxy_server) {
+      await this.proxy_server.close(true);
+    }
+    this.proxy_server = await startProxyServer(proxy);
     let t1 = new Date();
     this.logger.info(`Restarted proxy server in ${(t1.valueOf() - t0.valueOf())}ms.`);
   }
@@ -221,15 +222,11 @@ export class PersistantCrawlHandler {
 
     if (body.proxy) {
       this.logger.info('Using proxy: ' + body.proxy);
-      this.proxy_server.prepareRequestFunction = function (params: any) {
-        var {request, username, password, hostname, port, isHttp, connectionId} = params;
-        console.log('Using upstream proxy: ' + body.proxy);
-        return {
-          requestAuthentication: false,
-          upstreamProxyUrl: body.proxy,
-        };
-      }
     }
+    // always restart the proxy server. Also if we don't use a proxy
+    // reason: otherwise the old proxy is still used. We don't want that.
+    // Some api calls might be without proxy
+    await this.restartProxyServer(body.proxy || null);
 
     try {
       let worker = null;
@@ -294,7 +291,6 @@ export class PersistantCrawlHandler {
       search_metadata.status = 'Failed';
       this.logger.error(error.stack);
     } finally {
-      await this.closeProxyConnections();
       this.counter++;
       search_metadata.total_time_taken = ((new Date()).valueOf() - search_metadata.created_at) / 1000;
     }
