@@ -16,7 +16,7 @@ describe('webrtc is not detected', async () => {
       function_code: getFunc('webrtc_check.js'),
       loglevel: 'info',
       local_test: true,
-      items: ['https://www.expressvpn.com/webrtc-leak-test', 'https://www.hidemyass.com/webrtc-leak-test'],
+      items: ['https://www.expressvpn.com/webrtc-leak-test', 'https://www.hidemyass.com/webrtc-leak-test', 'https://ip.voidsec.com/'],
       mongodb_url: process.env.MONGODB_CONNECTION_URL,
       result_policy: ResultPolicy.store_in_cloud,
       block_webrtc: true,

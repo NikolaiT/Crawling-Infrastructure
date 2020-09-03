@@ -8,7 +8,6 @@ import {PageError} from './browser_worker';
 import {VersionInfo} from '@lib/types/common';
 import {S3Controller} from '@lib/storage/storage';
 import { BrowserWorker } from './browser_worker';
-import { HttpWorker} from './http_worker';
 import { startProxyServer } from './proxy_server';
 import {puppeteer_proxy_error_needles, http_codes_proxy_failure} from './handler';
 import {ResultPolicy, ExecutionEnv} from '@lib/types/common';
@@ -27,7 +26,6 @@ export class PersistantCrawlHandler {
   config: HttpWorkerConfig | BrowserWorkerConfig;
   logger: Logger;
   state: State;
-  http_worker: HttpWorker | null;
   browser_worker: BrowserWorker | null;
   proxy_server: any;
   counter: number;
@@ -36,7 +34,6 @@ export class PersistantCrawlHandler {
   constructor() {
     this.logger = getLogger(null, 'persistantHandler', LogLevel.verbose);
     this.state = State.initial;
-    this.http_worker = null;
     this.browser_worker = null;
     let config_handler = new CrawlConfig({} as BrowserWorkerConfig);
     this.config = config_handler.getDefaultConfig();
@@ -45,13 +42,23 @@ export class PersistantCrawlHandler {
     this.crawler_cache = {};
   }
 
-  public async setup(body: any) {
+  public async setup() {
     if (this.state === State.initial) {
-      this.http_worker = new HttpWorker(this.config);
       this.browser_worker = new BrowserWorker(this.config as BrowserWorkerConfig);
-      await this.http_worker.setup();
       await this.browser_worker.setup();
       this.state = State.running;
+    }
+  }
+
+  public async restartBrowser() {
+    if (this.browser_worker) {
+      this.logger.info(`Attempting to restart browser worker.`);
+      let t0 = new Date();
+      await this.browser_worker.cleanup();
+      this.browser_worker = new BrowserWorker(this.config as BrowserWorkerConfig);
+      await this.browser_worker.setup();
+      let t1 = new Date();
+      this.logger.info(`Restarted browser worker in ${(t1.valueOf() - t0.valueOf())}ms.`);
     }
   }
 
@@ -65,6 +72,8 @@ export class PersistantCrawlHandler {
     // @ts-ignore
     this.config.block_webrtc = true;
     // @ts-ignore
+    this.config.block_webrtc_extension = false;
+    // @ts-ignore
     this.config.default_navigation_timeout = 30000;
     // @ts-ignore
     this.config.request_timeout = 15000;
@@ -77,7 +86,7 @@ export class PersistantCrawlHandler {
        'headers', 'user_agent', 'default_navigation_timeout',
         'intercept_types', 'recaptcha_provider', 'timezone', 'language',
          'test_evasion', 'test_webrtc_leak', 'random_user_agent', 'user_agent_options',
-       'apply_evasion', 'block_webrtc'];
+       'apply_evasion', 'block_webrtc', 'incognito_page'];
 
     for (let key of update_keys) {
       if (body[key] !== undefined) {
@@ -125,6 +134,7 @@ export class PersistantCrawlHandler {
       bing: 'new_bing_scraper.js',
       raw: 'new_render_raw.js',
       fp: 'new_fp.js',
+      webrtc: 'new_webrtc_check.js',
     }
 
     if (!Object.keys(crawlers).includes(crawler_name)) {
@@ -198,20 +208,20 @@ export class PersistantCrawlHandler {
     search_metadata.id = this.getId(body, search_metadata.created_at);
     search_metadata.json_endpoint = `https://crawling-searches.s3-us-west-1.amazonaws.com/${search_metadata.id}.json`;
     search_metadata.raw_html_file = `https://crawling-searches.s3-us-west-1.amazonaws.com/${search_metadata.id}.html`;
-    this.logger.info('Using body: ' + JSON.stringify(body, null, 1));
+    this.logger.info('---------------------');
+    this.logger.info(`[n=${this.counter}] Api Call: ${JSON.stringify(body, null, 1)}`);
     await this.updateConfig(body);
-    await this.setup(body);
+    await this.setup();
     const results: any = [];
 
-    if (this.http_worker === null || this.browser_worker === null) {
+    if (this.browser_worker === null) {
       return results;
     }
 
     // assign the possibly updated config
     // @ts-ignore
     this.browser_worker.config = this.config;
-    this.http_worker.config = this.config;
-    this.logger.info('Using config: ' + JSON.stringify(this.config, null, 1));
+    this.logger.verbose('Using config: ' + JSON.stringify(this.config, null, 1));
 
     let items = body.items || [];
     // reload the browser page and close the current one
@@ -240,7 +250,7 @@ export class PersistantCrawlHandler {
 
       WorkerClass = eval('(' + function_code + ')');
       worker = new WorkerClass();
-      this.logger.info('Using crawler: ' + worker.constructor.name);
+      this.logger.info(`[n=${this.counter}] Using crawler: ${worker.constructor.name}`);
       // copy functionality from parent class
       // @TODO: find better way
       worker.page = this.browser_worker.page;
@@ -287,12 +297,16 @@ export class PersistantCrawlHandler {
           });
         }
       }
+      this.counter++;
     } catch (error) {
-      search_metadata.status = 'Failed';
+      search_metadata.status = 'Internal Error: ' + Error.toString();
       this.logger.error(error.stack);
     } finally {
-      this.counter++;
       search_metadata.total_time_taken = ((new Date()).valueOf() - search_metadata.created_at) / 1000;
+    }
+
+    if (search_metadata.status.startsWith('Internal Error') || body.restart_browser === true) {
+      await this.restartBrowser();
     }
 
     return {

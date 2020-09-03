@@ -34,6 +34,7 @@ export class BrowserWorker extends BaseWorker {
   user_agent_obj: any;
   user_agent_data: any;
   cleaned: boolean;
+  context: any;
 
   constructor(config: BrowserWorkerConfig, proxy_handler?: ProxyHandler) {
     super(config, proxy_handler);
@@ -46,6 +47,8 @@ export class BrowserWorker extends BaseWorker {
     this.name = 'BrowserWorker';
     this.cleaned = false;
     this.browser = null;
+    this.page = null;
+    this.context = null;
   }
 
   public async version(): Promise<any> {
@@ -96,9 +99,20 @@ export class BrowserWorker extends BaseWorker {
     if (!this.cleaned) {
       this.logger.info('Cleaning up browser/puppeteer.');
 
+      if (this.context) {
+        try {
+          this.logger.info(`Closing old context and clearing history...`);
+          await this.context.close();
+          this.context = null;
+        } catch (err) {
+          this.logger.error(`Could not context.close(): ${err.toString()}`);
+        }
+      }
+
       if (this.page) {
         try {
           await this.page.close();
+          this.page = null;
         } catch (err) {
           this.logger.error(`Could not page.close(): ${err.toString()}`);
         }
@@ -167,7 +181,23 @@ export class BrowserWorker extends BaseWorker {
       }
     }
 
-    this.page = await this.browser.newPage();
+    if (this.context) {
+      try {
+        this.logger.info(`Closing old context and clearing history...`);
+        // clear history
+        await this.context.close();
+      } catch (err) {
+        this.logger.error(`Could not context.close(): ${err.toString()}`);
+      }
+    }
+
+    if (this.config.incognito_page) {
+      this.logger.info(`browser.createIncognitoBrowserContext()`);
+      this.context = await this.browser.createIncognitoBrowserContext();
+      this.page = await this.context.newPage();
+    } else {
+      this.page = await this.browser.newPage();
+    }
 
     // throw page errors by default
     // https://github.com/puppeteer/puppeteer/issues/1890

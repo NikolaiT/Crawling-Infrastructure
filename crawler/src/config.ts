@@ -162,6 +162,9 @@ export interface BrowserWorkerConfig extends HttpWorkerConfig {
   // set via process.env['LANGUAGE']
   // example 'fr_FR'
   language: string;
+  // incognito page usage
+  // clean history
+  incognito_page: boolean;
 }
 
 export class CrawlConfig {
@@ -215,6 +218,10 @@ export class CrawlConfig {
 
     if (this.config.local_test === undefined) {
       this.config.local_test = false;
+    }
+
+    if (this.config.incognito_page === undefined) {
+      this.config.incognito_page = false;
     }
 
     if (this.config.store_browser_debug === undefined) {

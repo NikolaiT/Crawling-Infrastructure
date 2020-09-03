@@ -47,6 +47,7 @@ let payload = {
   items: ['what is my ip address?'],
   API_KEY: process.env.API_KEY,
   crawler: 'google',
+  incognito_page: true,
 };
 
 let payload2 = {
@@ -73,10 +74,23 @@ let payload4 = {
   no_cache: true,
 };
 
-(async () => {
-  console.dir(await call(payload3), {depth: null, colors: true});
-  console.dir(await call(payload4), {depth: null, colors: true});
+let payload5 = {
+  API_KEY: process.env.API_KEY,
+  crawler: 'webrtc',
+  loglevel: 'info',
+  items: ['https://ip.voidsec.com/'],
+  proxy: 'http://139.59.136.53:3128',
+};
 
-  console.dir(await call(payload3), {depth: null, colors: true});
-  console.dir(await call(payload4), {depth: null, colors: true});
+let payload6 = {
+  API_KEY: process.env.API_KEY,
+  crawler: 'webrtc',
+  loglevel: 'info',
+  items: ['https://ip.voidsec.com/'],
+  proxy: 'http://167.99.241.135:3128',
+  block_webrtc: false,
+};
+
+(async () => {
+  console.dir(await call(payload), {depth: null, colors: true});
 })();

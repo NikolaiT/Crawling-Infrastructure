@@ -12,7 +12,7 @@ import {getLogger, Logger} from "@lib/misc/logger";
 
 export enum ClusterSize {
   small = 'small', // t2.small
-  medium = 'medium', // t2.medium
+  medium = 'medium', // t2.medium, 2vCPU, 4G RAM
   larger = 'larger', // t2.large, 2vCPU, 8G RAM
   large = 'large', // t2.xlarge, 4vCPU, 16G RAM
   huge = 'huge', // t2.2xlarge, 8vCPU, 32G RAM

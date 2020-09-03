@@ -37,3 +37,35 @@ the function is not overwritten, thats way
 when we set the proxy as static, it works well.
 
 when restarting the proxy server, it never worked
+
+8) local test shows that changing the proxy is working, however, online tests show that in 100 api calls,
+
+- only 19/101 distinct ip are used with google
+- 99/101 distinct ips are used with ipinfo
+
+What is the reason? Is google serving cached pages? Is there some permanent ever cookie set that
+google is using to set an ID?
+
+
+=> Reset all browser data between api calls.
+
+https://stackoverflow.com/questions/55871650/how-to-clear-history-clear-browsing-data-in-node-js-puppeteer-headless-false-c/
+
+- Delete cookies.
+- Delete user-data-dir
+
+```
+const client = await page.target().createCDPSession();
+await client.send('Network.clearBrowserCookies');
+await client.send('Network.clearBrowserCache');
+```
+
+=> make sure that WebRTC is blocked in chrome browsers  
+
+https://github.com/VoidSec/WebRTC-Leak
+
+https://ip.voidsec.com/
+
+Implement a webrtc leak test with three different sites. [done]
+
+Is webrtc detected if we don't use webrtc evasion?
