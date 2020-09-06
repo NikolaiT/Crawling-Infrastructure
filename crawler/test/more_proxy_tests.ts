@@ -61,7 +61,7 @@ let proxies = [
          items: [kw],
          crawler: 'google',
          API_KEY: process.env.API_KEY,
-         incognito_page: true,
+         clear_cookies: true,
        };
        let response = await endpoint(payload, 'blankSlate', 'POST');
        console.log(response.search_metadata);
@@ -86,7 +86,7 @@ describe('changing proxies works while browser keeps alive', async () => {
         API_KEY: process.env.API_KEY,
         proxy: proxy.url,
         loglevel: 'info',
-        incognito_page: true,
+        clear_cookies: true,
       };
       let response = await endpoint(payload, 'blankSlate', 'POST');
       checkMetadata(response.search_metadata);
@@ -113,7 +113,7 @@ describe('alternative changing proxies', async () => {
         crawler: 'render',
         API_KEY: process.env.API_KEY,
         proxy: proxy.url,
-        incognito_page: true,
+        clear_cookies: true,
       };
       let response = await endpoint(payload, 'blankSlate', 'POST');
       checkMetadata(response.search_metadata);
@@ -139,7 +139,7 @@ describe('crawling google works with proxies', async () => {
         items: ['what is my ip address?'],
         crawler: 'google',
         API_KEY: process.env.API_KEY,
-        incognito_page: true,
+        clear_cookies: true,
       };
       if (proxy.url) {
         payload.proxy = proxy.url;
@@ -175,7 +175,7 @@ describe('switching proxies multiple times with google works', async () => {
         items: ['what is my ip address?'],
         crawler: 'google',
         API_KEY: process.env.API_KEY,
-        incognito_page: true,
+        clear_cookies: true,
       };
       if (proxy.url) {
         payload.proxy = proxy.url;

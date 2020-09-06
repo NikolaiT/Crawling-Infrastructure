@@ -35,6 +35,7 @@ export class BrowserWorker extends BaseWorker {
   user_agent_data: any;
   cleaned: boolean;
   context: any;
+  request_info: any;
 
   constructor(config: BrowserWorkerConfig, proxy_handler?: ProxyHandler) {
     super(config, proxy_handler);
@@ -49,6 +50,7 @@ export class BrowserWorker extends BaseWorker {
     this.browser = null;
     this.page = null;
     this.context = null;
+    this.request_info = [];
   }
 
   public async version(): Promise<any> {
@@ -83,6 +85,19 @@ export class BrowserWorker extends BaseWorker {
       await this.cleanup();
     }
     return success;
+  }
+
+  /**
+   * https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-clearBrowserCache
+   */
+  public async clearCookies() {
+    try {
+      this.logger.info('Deleting cookies with Network.clearBrowserCookies');
+      const client = await this.page.target().createCDPSession();
+      await client.send('Network.clearBrowserCookies');
+    } catch (err) {
+      this.logger.error(`Could not delete cookies: ${err.toString()}`);
+    }
   }
 
   /**
@@ -131,6 +146,7 @@ export class BrowserWorker extends BaseWorker {
         deleteFolderRecursive(this.user_data_dir);
       }
 
+      this.request_info = [];
       this.cleaned = true;
     }
   }
@@ -170,6 +186,8 @@ export class BrowserWorker extends BaseWorker {
   }
 
   public async setupPage(user_agent: string = '') {
+    // delete all saved request info
+    this.request_info = [];
     this.logger.info(`setupPage()`);
     // try to close page before opening a new page
     if (this.page) {
@@ -197,6 +215,11 @@ export class BrowserWorker extends BaseWorker {
       this.page = await this.context.newPage();
     } else {
       this.page = await this.browser.newPage();
+    }
+
+    // delete cookies if configured
+    if (this.config.clear_cookies) {
+      await this.clearCookies();
     }
 
     // throw page errors by default
@@ -254,28 +277,25 @@ export class BrowserWorker extends BaseWorker {
     try {
       if (Array.isArray(this.config.intercept_types) && this.config.intercept_types.length > 0) {
         const allowed_intercept_types = [
+          'document',
           'image',
+          'other',
+          'script',
           'stylesheet',
-          'media',
+          'xhr',
           'font',
-          'texttrack',
-          'object',
-          'beacon',
-          'csp_report',
-          'imageset',
-          'javascript',
+          'manifest',
+          'fetch',
         ];
         let intercept = [];
-
         for (let type of this.config.intercept_types) {
           type = type.toString().toLowerCase();
           if (allowed_intercept_types.includes(type)) {
             intercept.push(type);
           }
         }
-
         if (intercept.length > 0) {
-          this.logger.info(`Intercepting types: ${intercept}`);
+          this.logger.info(`Intercepting types: ${JSON.stringify(intercept)}`);
           await this.intercept(intercept);
         }
       }
@@ -615,14 +635,26 @@ export class BrowserWorker extends BaseWorker {
   }
 
   private async intercept(intercept: Array<string>) {
+    this.request_info = [];
     await this.page.setRequestInterception(true);
     this.page.on('request', (req: any) => {
-      let type = req.resourceType();
-      if (intercept.includes(type.toLowerCase())) {
+      let type = req.resourceType().toLowerCase();
+      let url = req.url();
+      if (url.startsWith('data:image')) {
+        url = 'data:image';
+      }
+      let req_info = {
+        intercepted: false,
+        type: type,
+        url: url,
+      };
+      if (intercept.includes(type)) {
+        req_info.intercepted = true;
         req.abort();
       } else {
         req.continue();
       }
+      this.request_info.push(req_info);
     });
   }
 

@@ -23,7 +23,7 @@ export enum State {
 }
 
 export class PersistantCrawlHandler {
-  config: HttpWorkerConfig | BrowserWorkerConfig;
+  config: BrowserWorkerConfig;
   logger: Logger;
   state: State;
   browser_worker: BrowserWorker | null;
@@ -36,7 +36,7 @@ export class PersistantCrawlHandler {
     this.state = State.initial;
     this.browser_worker = null;
     let config_handler = new CrawlConfig({} as BrowserWorkerConfig);
-    this.config = config_handler.getDefaultConfig();
+    this.config = (config_handler.getDefaultConfig()) as BrowserWorkerConfig;
     this.proxy_server = null;
     this.counter = 0;
     this.crawler_cache = {};
@@ -65,19 +65,12 @@ export class PersistantCrawlHandler {
   private updateConfig(body: any) {
     // set default config options
     this.config.worker_id = 1;
-    // @ts-ignore
     this.config.result_policy = ResultPolicy.return;
-    // @ts-ignore
     this.config.apply_evasion = true;
-    // @ts-ignore
     this.config.block_webrtc = true;
-    // @ts-ignore
     this.config.block_webrtc_extension = false;
-    // @ts-ignore
     this.config.default_navigation_timeout = 30000;
-    // @ts-ignore
     this.config.request_timeout = 15000;
-    // @ts-ignore
     this.config.pup_args = [`--proxy-server=http://localhost:8000`];
 
     let update_keys: Array<string> = ['function_code', 'items',
@@ -86,7 +79,7 @@ export class PersistantCrawlHandler {
        'headers', 'user_agent', 'default_navigation_timeout',
         'intercept_types', 'recaptcha_provider', 'timezone', 'language',
          'test_evasion', 'test_webrtc_leak', 'random_user_agent', 'user_agent_options',
-       'apply_evasion', 'block_webrtc', 'incognito_page'];
+       'apply_evasion', 'block_webrtc', 'incognito_page', 'clear_cookies'];
 
     for (let key of update_keys) {
       if (body[key] !== undefined) {
@@ -204,6 +197,7 @@ export class PersistantCrawlHandler {
       processed_at: '',
       raw_html_file: '',
       total_time_taken: 0,
+      time_taken_crawling: 0,
     };
     search_metadata.id = this.getId(body, search_metadata.created_at);
     search_metadata.json_endpoint = `https://crawling-searches.s3-us-west-1.amazonaws.com/${search_metadata.id}.json`;
@@ -219,7 +213,6 @@ export class PersistantCrawlHandler {
     }
 
     // assign the possibly updated config
-    // @ts-ignore
     this.browser_worker.config = this.config;
     this.logger.verbose('Using config: ' + JSON.stringify(this.config, null, 1));
 
@@ -267,20 +260,31 @@ export class PersistantCrawlHandler {
           this.logger.warn(`Abort crawling for reason: ${this.browser_worker.status}`);
           break;
         }
+
+        let elapsed: number = 0;
+        let t0 = new Date();
         try {
-          let t0 = new Date();
           search_metadata.processed_at = new Date();
           let result = await worker.crawl(item);
           results.push(result);
           let t1 = new Date();
-          let elapsed = t1.valueOf() - t0.valueOf();
+          elapsed = t1.valueOf() - t0.valueOf();
+          search_metadata.time_taken_crawling += elapsed;
           this.logger.verbose(`[${i}] Successfully crawled item ${item} in ${elapsed}ms`);
+          if (this.config.intercept_types) {
+            this.logger.verbose(JSON.stringify(this.browser_worker.request_info, null, 1));
+          }
+          // dont wait for the upload to finish
           if (body.crawler.toLowerCase() === 'google' || body.crawler.toLowerCase() === 'bing') {
             this.storeResults(search_metadata.id, result).then((uploaded) => {
               this.logger.info(`[${i}] Done uploading results to s3...`);
             });
           }
         } catch (Error) {
+          if (elapsed === 0) {
+            elapsed = (new Date()).valueOf() - t0.valueOf();
+            search_metadata.time_taken_crawling += elapsed;
+          }
           search_metadata.status = 'Failed';
           this.logger.error(`[${i}] Failed to crawl item ${item} with error: ${Error.message}`);
           let err_message = Error.toString();
@@ -303,6 +307,7 @@ export class PersistantCrawlHandler {
       this.logger.error(error.stack);
     } finally {
       search_metadata.total_time_taken = ((new Date()).valueOf() - search_metadata.created_at) / 1000;
+      search_metadata.time_taken_crawling /= 1000;
     }
 
     if (search_metadata.status.startsWith('Internal Error') || body.restart_browser === true) {

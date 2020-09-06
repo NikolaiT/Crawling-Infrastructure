@@ -165,6 +165,8 @@ export interface BrowserWorkerConfig extends HttpWorkerConfig {
   // incognito page usage
   // clean history
   incognito_page: boolean;
+  // delete cookies on new page creation
+  clear_cookies: boolean;
 }
 
 export class CrawlConfig {
@@ -222,6 +224,10 @@ export class CrawlConfig {
 
     if (this.config.incognito_page === undefined) {
       this.config.incognito_page = false;
+    }
+
+    if (this.config.clear_cookies === undefined) {
+      this.config.clear_cookies = false;
     }
 
     if (this.config.store_browser_debug === undefined) {

@@ -23,7 +23,7 @@ let proxies = [
          loglevel: 'info',
          items: ['https://ip.voidsec.com/'],
          proxy: proxy.url,
-         block_webrtc: true,
+         clear_cookies: true,
        };
        let response = await endpoint(payload, 'blankSlate', 'POST');
        console.log(`checking that ${response.results[0].ip} = ${proxy.ip}`)
@@ -40,7 +40,7 @@ let proxies = [
          loglevel: 'info',
          items: ['https://ip.voidsec.com/'],
          proxy: proxy.url,
-         block_webrtc: false
+         clear_cookies: true
        };
        let response = await endpoint(payload, 'blankSlate', 'POST');
        console.log(`checking that webrtc leak occurs: ${JSON.stringify(response.results[0])}`);

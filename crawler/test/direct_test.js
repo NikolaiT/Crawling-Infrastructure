@@ -44,10 +44,9 @@ async function callRemote(payload) {
 }
 
 let payload = {
-  items: ['what is my ip address?'],
+  items: ['homelessness rate usa'],
   API_KEY: process.env.API_KEY,
   crawler: 'google',
-  incognito_page: true,
 };
 
 let payload2 = {
