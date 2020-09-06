@@ -156,13 +156,30 @@ Median (50%): 3.0965 seconds
 And for the UK:
 
 ```
+something wrong with results in file google_3408.json
 Num Api Calls (N): 101
-Api Calls succeeded: 69/101
-Num disticnt ips (Google Serp): 93
-Num Api calls recaptcha shown: 29/101
+Api Calls succeeded: 70/101
 Num Api calls failed: 2/101
-Average invocation time: 3.35 seconds
-Median (50%): 2.358 seconds
-25% percentile: 2.258 seconds
-75% percentile: 2.768 seconds
+Num Api calls recaptcha: 29/101
+Num IP mismatches: 0
+Num distinct ips (Google Serp): 93
+Average invocation time: 3.34 seconds
+Median (50%): 2.3705 seconds
+25% percentile: 2.2584999999999997 seconds
+75% percentile: 2.76025 seconds
+```
+
+Anf for the US again with confirming ip address externally:
+
+```
+Num Api Calls (N): 101
+Api Calls succeeded: 92/101
+Num Api calls failed: 7/101
+Num Api calls recaptcha: 2/101
+Num IP mismatches: 0
+Num distinct ips (Google Serp): 94
+Average invocation time: 3.24 seconds
+Median (50%): 3.097 seconds
+25% percentile: 2.7910000000000004 seconds
+75% percentile: 3.4615 seconds
 ```
