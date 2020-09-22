@@ -3,6 +3,10 @@ FROM ubuntu:18.04
 # Application parameters and variables
 ENV application_directory=/home/node/scheduler
 
+# Timezone
+ENV TZ=Europe/Paris
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Create app directory
 WORKDIR $application_directory
 
