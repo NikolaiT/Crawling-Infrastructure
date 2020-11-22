@@ -5,6 +5,7 @@ FROM ubuntu:18.04
 ENV HOST=0.0.0.0
 ENV PORT=9001
 ENV application_directory=/home/node/app
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Create app directory
 WORKDIR $application_directory
