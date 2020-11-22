@@ -2,6 +2,8 @@ FROM ubuntu:18.04
 
 # Application parameters and variables
 ENV application_directory=/home/node/scheduler
+ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Create app directory
 WORKDIR $application_directory
