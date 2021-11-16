@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@types/glob": "^7.1.1",
-    "aws-sdk": "^2.599.0",
+    "aws-sdk": "^2.814.0",
     "detect-newline": "^3.1.0",
     "glob": "^7.1.6",
     "mongoose": "^5.9.11",
