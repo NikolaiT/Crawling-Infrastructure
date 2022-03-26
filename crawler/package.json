@@ -46,7 +46,7 @@
     "glob": "^7.1.6",
     "got": "^9.6.0",
     "md5": "^2.3.0",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "module-alias": "^2.2.2",
     "mongoose": "^5.8.7",
     "proxy-chain": "^0.4.5",
